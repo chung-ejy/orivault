@@ -1,0 +1,89 @@
+# Orivault
+
+## Introduction
+Welcome to the **Orivault** provided by [Oritude](www.oritude.com)! This repository is designed to foster collaboration, transparency, and shared learning within the Oritude community. It aggregates financial research tools and frameworks, empowering individuals to analyze, refine, and share insights.
+
+## Features
+- **Transparency**: All research code is community-reviewed to ensure accuracy and reliability.
+- **Collaboration**: Contributions are encouraged to build a repository that grows through shared learning.
+- **Accessibility**: Designed for developers and researchers of all levels to explore, contribute, and benefit from the collective knowledge.
+
+## File Structure
+Each of the different studies has its own dedicated folder. Inside each of them there is are several jupyter notebooks
+for your reference and studies along with required classes to make the notebook run. Additionally there are a number
+of classes that are used across each of the studies. We recommend looking through the common folders and understanding the 
+purpose of each one.
+
+# Getting Started
+
+## Prerequisites
+Before you begin, ensure you have the following installed:
+1. **Python Version 3.11.9**: Download and install from the [official Python website](https://www.python.org/).
+2. **MongoDB Community Database**: Install the community edition from [MongoDB's website](https://www.mongodb.com/try/download/community) and configure a cloud database if preferred.
+3. **A Code Editor**: Use any editor of your choice, such as [VS Code](https://code.visualstudio.com/), [PyCharm](https://www.jetbrains.com/pycharm/), or [Sublime Text](https://www.sublimetext.com/).
+---
+
+## Setting Up the Repository
+1. Clone this repository to your local machine:
+   ```bash
+   git clone https://github.com/username/repository-name.git
+2. Enter into the folder
+    ``` bash
+    cd repository-name
+3. Create a virtual environment using venv 
+    ```bash
+    python -m venv venv
+4. Activate virtual environment
+    ```bash
+    source venv/Scripts/activate
+5. Install Required Packages
+    ```bash
+    pip install -r requirements.txt
+---
+
+### Data Subscriptions
+
+The following resources are essential for accessing data and are **completely free** to use:
+1. [Tiingo](https://www.tiingo.com/) - A financial data platform offering free API access with registration.
+2. [Polygon.io](https://www.polygon.io/) - A market data provider with a free plan for basic API access.
+3. [Federal Reserve Economic Data (FRED)](https://fred.stlouisfed.org/docs/api/api_key.html) - Free economic data provided by the Federal Reserve.
+4. [SEC Financial Statement Files](https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets)Manually Downloading SEC - Free financial statement data sets provided by the U.S Securities and Exchange Commission
+5. [MongoDB Atlas](https://www.mongodb.com/products/platform/atlas-database) - An optional cloud database solution offering a free-tier plan for hosting your database online.
+---
+
+### Configure Environment Variables
+To securely store and manage your API keys, follow these steps:
+
+1. Create a `.env` file in the project’s root directory.
+2. Add the required secrets to the `.env` file. Here’s an example structure:
+   ```plaintext
+   # Environment Variables
+   MONGOKEY=        # Your MongoDB connection string (optional)
+   TIINGOKEY=       # Your Tiingo API key
+   FREDKEY=         # Your FRED API key
+   POLYGONKEY=      # Your Polygon.io API key
+
+### Downloading required data locally
+Each of these studies require data that is stored locally to run. The reason we store data locally is to reduce strain on our data providers and allow for easy access to our required data during studies.
+
+1. Look through the data_extraction_scripts folder and understand the purpose of each data extraction script. Alternatively copy paste this bad boy into your terminal.
+    ```bash
+    cd data_extraction_scripts
+    ./extract.sh
+---
+
+### Storing SEC Financial Statment Files
+This data set is only required for the financial statement study
+1. Create a folder called "sec" in the root folder of the repository
+    ```bash
+    mkdir sec
+2. Download as my quarterly files from [SEC Financial Statement Files](https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets) as you want and move them to the sec file
+3. Unzip each file keeping the name of the extract folder to be the same as the zip file name just without the zip. Example:
+    ```plaintext
+    2025q2.zip ~~ 2025q2
+---
+
+# You are ready!
+
+We recommend that you look through the **common** and **financial_common** to have a better understanding of the global classes we provide. From there take a look at **financial_statement_study** to get started with your studies! Best of luck from **Oritude**
+

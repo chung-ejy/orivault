@@ -1,0 +1,64 @@
+# `common` Subdirectory
+
+The `common` subdirectory serves as a core utility layer for the project, encapsulating essential functionalities that streamline database management, data extraction, and data processing. This modular structure ensures clean separation of concerns, reusability, and consistency across the project.
+
+---
+
+## Directory Structure
+The `common` subdirectory contains the following directories:
+
+```plaintext
+common/
+├── database/
+├── extractor/
+└── processor/
+```
+
+### 1. `database/`
+This directory includes classes and modules for managing database access and interactions. It simplifies tasks such as:
+- Establishing and maintaining database connections.
+- Querying and updating records in both local and cloud-based MongoDB databases.
+- Ensuring secure handling of database credentials (e.g., through environment variables).
+
+**Example Classes:**
+- `ADatabase`: Establishes and manages database connections.
+---
+
+### 2. `extractor/`
+The `extractor` directory focuses on extracting data from various data subscriptions. It provides a unified interface to interact with external APIs and data services.
+
+**Key Features:**
+- Retrieves data from platforms such as Tiingo, Polygon.io, and FRED.
+- Ensures API keys and secrets are securely managed.
+- Handles retries and error management for robust data extraction.
+
+**Example Classes:**
+- `TiingoExtractor`: Fetches data from the Tiingo API.
+- `PolygonExtractor`: Interfaces with Polygon.io for market data.
+- `FREDExtractor`: Gathers economic data from FRED.
+---
+
+### 3. `processor/`
+The `processor` directory houses classes that process extracted data into consistent formats. It ensures that data is prepared for analysis and downstream applications.
+
+**Key Features:**
+- Transforms raw data into standardized formats.
+- Handles data validation and cleaning.
+- Implements reusable methods for calculations and processing workflows.
+
+**Example Classes:**
+- `Processor`: Standardizes and cleans data inputs.
+---
+
+## How to Use
+1. Ensure all dependencies are installed and environment variables are properly configured (refer to the project-level README).
+2. Utilize the classes in this subdirectory to streamline database, extraction, and processing tasks. Import the relevant modules as needed:
+   ```python
+   from common.database.adatabase import ADatabase
+   from common.extractor.tiingo_extractor import TiingoExtractor
+   from common.processor.processor import lower_column
+   ```
+---
+
+## License
+This subdirectory is part of the **Orivault** and is distributed under the same license as the main repository.

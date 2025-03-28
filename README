@@ -39,6 +39,14 @@ Before you begin, ensure you have the following installed:
 5. Install Required Packages
     ```bash
     pip install -r requirements.txt
+6. Create a .gitignore file
+    ```bash
+    touch .gitignore
+6. Add things to ignore in your .gitignore file
+   ```plaintext
+   .gitignore
+    .env
+    venv/
 ---
 
 ### Data Subscriptions
@@ -55,6 +63,9 @@ The following resources are essential for accessing data and are **completely fr
 To securely store and manage your API keys, follow these steps:
 
 1. Create a `.env` file in the project’s root directory.
+    ```bash
+    touch .env
+
 2. Add the required secrets to the `.env` file. Here’s an example structure:
    ```plaintext
    # Environment Variables
@@ -66,10 +77,8 @@ To securely store and manage your API keys, follow these steps:
 ### Downloading required data locally
 Each of these studies require data that is stored locally to run. The reason we store data locally is to reduce strain on our data providers and allow for easy access to our required data during studies.
 
-1. Look through the data_extraction_scripts folder and understand the purpose of each data extraction script. Alternatively copy paste this bad boy into your terminal.
-    ```bash
-    cd data_extraction_scripts
-    ./extract.sh
+1. Look through the scripts/data_extraction folder and understand the purpose of each data extraction script.
+Then begin running each one.
 ---
 
 ### Storing SEC Financial Statment Files

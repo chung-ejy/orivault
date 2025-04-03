@@ -1,11 +1,13 @@
-from extractor.fred_extractor import FREDExtractor
+from common.extractor.fred_extractor import FREDExtractor
 from datetime import datetime, timedelta
-from database.adatabase import ADatabase
+from common.database.adatabase import ADatabase
 
+## Define classes and constants
 fred = ADatabase("fred")
 start = datetime.now() - timedelta(days=365.25*14)
 end = datetime.now()
 
+## download macro factors
 sp500 = FREDExtractor.sp500(start,end)
 market_yield = FREDExtractor.market_yield(start,end)
 oil = FREDExtractor.oil(start,end)
@@ -13,6 +15,7 @@ gdp = FREDExtractor.gdp(start,end)
 m2 = FREDExtractor.m2(start,end)
 inflation = FREDExtractor.inflation(start,end)
 
+## store macro factors and reset databases
 fred.connect()
 fred.drop("sp500")
 fred.drop("market_yield")

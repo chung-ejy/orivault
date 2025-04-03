@@ -1,0 +1,49 @@
+# `scripts` Subdirectory
+
+The `scripts` subdirectory serves as a layer for the project to provide essential scripts for the operation
+of the research studies. Each script is categorized by its data purpose and is important for the smooth execution of research code.
+---
+
+## Directory Structure
+The `scripts` subdirectory contains the following directories:
+
+```plaintext
+scripts/
+├── data_calculations/
+├── data_extraction/
+└── data_transformation/
+```
+
+### 1. `data_extraction/`
+This directory includes scripts for accessing our data subscriptions and storing said data in a consistent and cleaned manner. If you're familiar with REST API's and would like to customize this portion, be aware of the ending format for each dataset as the research studies are dependent on them.:
+
+**Example Scripts:**
+- `extract`: Extract stock data
+- `extract_fred`: Extract federal reserve data
+---
+
+### 2. `data_calculations/`
+This directory includes scripts for creating customized datasets accessible to the research studies. The only example currently is a macroeconomic model to project the performance of the SPY index.
+
+**Example Scripts:**
+- `macro_model`: Leverage macro economic factors to project SPY performance. Used in capital asset pricing models in research studies.
+---
+
+### 3. `data_transformations/`
+This directory includes scripts for transforming raw file data to mongodb documents, specifically SEC financial statement data. 
+
+**Example Scripts:**
+- `transform_filings`: Extracts the raw data from the root sec folder and stores it into the mongodb local database.
+---
+
+
+## How to Use
+1. Ensure all dependencies are installed and environment variables are properly configured (refer to the project-level README).
+2. Utilize the scripts in this subdirectory to download the necessary data to your mongodb cloud or local database:
+   ```bash
+   python ./scripts/data_extraction/extract.py
+   ```
+---
+
+## License
+This subdirectory is part of the **Orivault** and is distributed under the same license as the main repository.

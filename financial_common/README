@@ -1,0 +1,53 @@
+# `financial_common` Subdirectory
+
+The `financial_common` subdirectory serves as a core financial layer for the project, encapsulating essential financial functionalities that streamlines modeling, portfolio management and risk management across research studies. This modular structure ensures clean separation of concerns, reusability, and consistency across the project.
+
+---
+
+## Directory Structure
+The `financial_common` subdirectory contains the following directories:
+
+```plaintext
+financial_common/
+├── indicator/
+├── portfolio_management/
+└── risk/
+```
+
+### 1. `indicator/`
+This directory includes classes and modules for indicator management and analysis. It simplifies tasks such as:
+- Asset stats and indicators
+
+**Classes:**
+- `Indicator`: calculates all indicators given a dataframe of appropriate columns.
+
+### 1. `risk/`
+This directory includes classes and modules for risk management and analysis. It simplifies tasks such as:
+- Factor Analysis of two variables.
+- Executing a Single Index Capital Asset Pricing Model based off macro predictions executed in previous scripts
+
+**Classes:**
+- `RollingFactorAnalysis`: Apply rolling factor loadings to a DataFrame.
+- `SingleIndexCapm`: Apply CAPM-related computations to the given DataFrame.
+---
+
+### 2. `portfolio_management/`
+This directory houses classes and modules dedicated to portfolio management and analysis. It provides tools to streamline key tasks and support informed decision-making, including:
+- **Performance Analysis**: Evaluate a portfolio's performance through key performance indicators (KPIs) and metrics derived from trade executions.
+- **Security Selection**: Automate the process of selecting securities based on systematic ranking, filtering, and other customizable criteria.
+
+#### **Classes Overview**:
+- **`Metrics`**:
+   - Provides detailed performance analysis of a portfolio.
+   - Computes and returns key performance indicators, such as profit/loss (PnL), volatility, downside risk, win rate, and other statistics related to trade executions and portfolio performance.
+   - Designed to assist with benchmarking and identifying portfolio strengths and weaknesses.
+
+- **`SecuritySelection`**:
+   - Facilitates the selection of securities from grouped data (e.g., grouped by time periods like year/week) based on a ranking or sorting variable.
+   - Supports advanced asset selection strategies, including top-percentage filtering and mixed allocation sampling for more balanced security distribution.
+   - Fully customizable to adapt to specific portfolio management requirements.
+
+---
+
+## License
+This subdirectory is part of the **Orivault** and is distributed under the same license as the main repository.

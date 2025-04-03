@@ -42,11 +42,14 @@ Before you begin, ensure you have the following installed:
 6. Create a .gitignore file
     ```bash
     touch .gitignore
-6. Add things to ignore in your .gitignore file
+7. Add things to ignore in your .gitignore file
    ```plaintext
    .gitignore
     .env
     venv/
+8. If you would like to access the research studies. Install the research study requirements:
+    ```plaintext
+    pip install -r requirements_research.txt
 ---
 
 ### Data Subscriptions

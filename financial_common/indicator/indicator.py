@@ -12,9 +12,9 @@ class Indicator(object):
         if live:
             cols = {
                 "price": "adjclose",
-                "high": "high",
-                "low": "low",
-                "volume": "volume"
+                "high": "adjhigh",
+                "low": "adjlow",
+                "volume": "adjvolume"
             }
         else:
             cols = {
@@ -24,17 +24,14 @@ class Indicator(object):
                 "volume": "reference_volume"
             }
             price[cols["price"]] = price["adjclose"].shift(1)
-            price[cols["volume"]] = price["volume"].shift(1)
-            price[cols["high"]] = price["high"].shift(1)
-            price[cols["low"]] = price["low"].shift(1)
+            price[cols["volume"]] = price["adjvolume"].shift(1)
+            price[cols["high"]] = price["adjhigh"].shift(1)
+            price[cols["low"]] = price["adjlow"].shift(1)
         # Core calculations
+        price["rolling_dollar_volume"] = (price[cols["price"]] * price[cols["volume"]]).rolling(window=timeframe).mean()
         price["adr"] = ((price[cols["high"]] - price[cols["low"]]) / price[cols["price"]]).rolling(timeframe).mean()
         price["sma"] = price[cols["price"]].rolling(timeframe).mean() / price[cols["price"]]
         price["ema"] = price[cols["price"]].ewm(span=timeframe, adjust=False).mean() / price[cols["price"]]
-
-        delta = price[cols["price"]].diff()
-        gain = delta.where(delta > 0, 0).rolling(timeframe).sum()
-        loss = -delta.where(delta < 0, 0).rolling(timeframe).sum()
 
         rolling_mean = price[cols["price"]].rolling(timeframe).mean()
         price["std"] = price[cols["price"]].rolling(timeframe).std()
@@ -43,12 +40,11 @@ class Indicator(object):
 
         price["pct_change"] = price[cols["price"]] / price[cols["price"]].shift(100)
         price["coev"] = price["std"] / rolling_mean
-        price["market_cap"] = (price[cols["price"]] * price[cols["volume"]]).rolling(window=timeframe).mean()
         price["atr"] = (price[cols["high"]] - price[cols["low"]]).rolling(timeframe).mean()
 
         # Momentum Indicators
         price["momentum"] = price[cols["price"]].diff(timeframe)
-        price["roc"] = price[cols["price"]].pct_change(timeframe)
+        price["roc"] = price[cols["price"]].pct_change(timeframe,fill_method=None) 
 
         # Williams %R (reverse scaling so that high values are positive)
         price["williams_r"] = -((price[cols["high"]].rolling(timeframe).max() - price[cols["price"]]) /
@@ -76,12 +72,14 @@ class Indicator(object):
         # Compute weighted sum for `rogan`
         price["rogan"] = sum(price[ind] * weight for ind, weight in boosting_indicators.items() if ind in price) + \
                         sum(price[ind] * weight for ind, weight in penalizing_indicators.items() if ind in price)
-
-        return price.dropna()
+        price.dropna(inplace=True)
+        price["rolling_dollar_volume"] = (price["rolling_dollar_volume"]/10000000).astype(int)
+        return price
 
     
     def get_trading_signals():
         return [
+            "rolling_dollar_volume",  # Rolling Dollar Volume
             "adr",  # Average Daily Range
             "sma",  # Simple Moving Average Ratio
             "ema",  # Exponential Moving Average Ratio

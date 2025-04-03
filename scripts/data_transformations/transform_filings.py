@@ -1,9 +1,11 @@
 import pandas as pd
-from database.adatabase import ADatabase
-from processor.processor import Processor as p
+from common.database.adatabase import ADatabase
 from tqdm import tqdm
+
+## Define Database
 sec = ADatabase("sec")
 
+## Transform and store sec raw files
 sec.connect()
 sec.drop("filings")
 for year in tqdm(range(2013,2025)):

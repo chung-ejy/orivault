@@ -16,7 +16,13 @@ class PolygonExtractor(object):
     # Returns:
     # - A JSON object containing stock ticker information retrieved from the Polygon.io API.
     def ticker_info(self):
-        url = f"https://api.polygon.io/v3/reference/tickers?market=stocks&type=CS&active=true&order=asc&limit=1000&sort=ticker&apiKey={self.key}"
+        url = f"https://api.polygon.io/v3/reference/tickers?market=stocks&type=CS&order=asc&limit=1000&sort=ticker&apiKey={self.key}"
+        requestBody = r.get(url)
+        data = requestBody.json()
+        return data
+    
+    def ticker_overview(self,ticker):
+        url = f"https://api.polygon.io/v3/reference/tickers/{ticker}?apiKey={self.key}"
         requestBody = r.get(url)
         data = requestBody.json()
         return data

@@ -9,9 +9,11 @@ The `financial_common` subdirectory contains the following directories:
 
 ```plaintext
 financial_common/
+├── assets/
 ├── indicator/
 ├── portfolio_management/
-└── risk/
+├── risk/
+└── trading/
 ```
 
 ### 1. `indicator/`

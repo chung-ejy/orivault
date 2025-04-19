@@ -1,3 +1,10 @@
+## PATH settings
+import os
+import sys
+project_root = os.path.abspath(os.path.join(os.getcwd(), ''))
+sys.path.append(project_root)
+COMMON_PATH = os.path.join(project_root, 'common')
+
 from datetime import datetime, timedelta
 from common.processor.processor import Processor as p
 from common.database.adatabase import ADatabase
@@ -12,34 +19,10 @@ import os
 load_dotenv()
 
 ## Initialize classes and constants
-years = 5
+years = 15
 market = ADatabase("market")
-poly = PolygonExtractor(os.getenv("POLYGONKEY"))
+poly = PolygonExtractor()
 tiingo = TiingoExtractor()
-
-## Download current stocks
-ticker_info = poly.ticker_info()
-ticker_infos = []
-ticker_infos.extend(ticker_info["results"])
-key = os.getenv("POLYGONKEY")
-for i in range(6):
-    try:
-        if "next_url" in ticker_info:
-            next_url = ticker_info["next_url"]
-        else:
-            break
-        ticker_info = r.get(next_url+f"&apiKey={key}").json()
-        ticker_infos.extend(ticker_info["results"])
-        sleep(20)
-    except Exception as e:
-        print(str(e))
-index = pd.DataFrame(ticker_infos).sort_values("ticker")
-prices = []
-
-market.connect()
-market.drop("index")
-market.store("index",index)
-market.disconnect()
 
 ## Download stock prices
 end = datetime.now()

@@ -18,7 +18,7 @@ class TiingoExtractor(object):
     # - end (datetime): End date of the observation period.
     # Returns:
     # - Pandas DataFrame containing the historical price data retrieved from the Tiingo API.
-    @classmethod
+    
     def prices(self, ticker, start, end):
         params = {
             "token": self.token,

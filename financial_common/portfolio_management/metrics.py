@@ -51,8 +51,8 @@ class Metrics:
         metrics = {
             "date": trades["date"].max(),  # Latest trade date
             "pnl": pnl,
-            "downside": downside,
-            "coefficient_of_variation": coefficient_of_variation,
+            # "downside": downside,
+            "coefficient_of_variation": pnl/portfolio_std,
             "portfolio_std": portfolio_std,
             "average_gain": average_gain,
             "average_loss": average_loss,

@@ -1,7 +1,9 @@
 from financial_common.portfolio_management.security_selection.selection_type import SelectionType
 from financial_common.portfolio_management.portfolio import Portfolio
+from financial_common.risk.risk_type import RiskType
 from financial_common.assets.timeframe import Timeframe
 from financial_common.assets.position_type import PositionType
+from financial_common.portfolio_management.security_allocation.allocation_type import AllocationType
 from itertools import product
 
 class PortfolioSelection:
@@ -29,8 +31,8 @@ class PortfolioSelection:
 
         # Generate portfolios for all combinations of parameters
         portfolios = []
-        for grouping_column, ranking_metric, timeframe, group_percentage, selection_type, position_type in product(
-                grouping_columns, ranking_metrics, Timeframe, group_percentages, SelectionType, PositionType):
+        for grouping_column, ranking_metric, timeframe, group_percentage, selection_type, allocation_type, risk_type, position_type in product(
+                grouping_columns, ranking_metrics, Timeframe, group_percentages, SelectionType, AllocationType,RiskType, PositionType):
             
             portfolio = Portfolio(
                 grouping_column=grouping_column,
@@ -38,6 +40,8 @@ class PortfolioSelection:
                 timeframe=timeframe.value,
                 position_type=position_type.label,
                 selection_type=selection_type.label,
+                allocation_type=allocation_type.label,
+                risk_type=risk_type.label,
                 selection_percentage=group_percentage
             )
             portfolios.append(portfolio)

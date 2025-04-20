@@ -7,3 +7,5 @@ requests==2.32.3
 xgboost==2.0.3
 scikit-learn==1.6.1
 coinbase-advanced-py==1.8.2
+lxml==5.3.2
+spacy==3.8.5

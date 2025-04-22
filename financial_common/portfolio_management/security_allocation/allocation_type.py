@@ -29,7 +29,6 @@ class EqualAllocation:
         group["weight"] = 1
         return group
 
-
 class MarketCapAllocation:
     @staticmethod
     def allocate(group):

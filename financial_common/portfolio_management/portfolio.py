@@ -1,6 +1,6 @@
-from financial_common.trading.trades import Trades
 from financial_common.portfolio_management.security_selection.selection_type import SelectionType
 from financial_common.portfolio_management.security_allocation.allocation_type import AllocationType
+from financial_common.portfolio_management.security_selection.grouping_type import GroupingType
 from financial_common.risk.risk_type import RiskType
 from financial_common.assets.position_type import PositionType
 from scipy.stats.mstats import winsorize
@@ -8,21 +8,21 @@ from common.processor.processor import Processor as p
 from enum import Enum
 class Portfolio(object):
 
-    def __init__(self, timeframe, ranking_type, position_type, selection_type, allocation_type, risk_type, selection_percentage, grouping_column):
+    def __init__(self, timeframe, ranking_metric, position_type, grouping_type, selection_type,  allocation_type, risk_type, selection_percentage):
         self.timeframe = timeframe  # Timeframe of the assets (e.g., week, month, quarter)
-        self.ranking_type = ranking_type  # Metric used to rank the securities
+        self.ranking_metric = ranking_metric  # Metric used to rank the securities
         self.position_type = PositionType.get_position_type(position_type)
+        self.grouping_type = GroupingType.get_grouping_type(grouping_type)  # Type of grouping (e.g., sector, industry)
         self.selection_type = SelectionType.selection_type_factory(selection_type)
         self.allocation_type = AllocationType.allocation_type_factory(allocation_type)
         self.risk_type = RiskType.risk_type_factory(risk_type)
         self.selection_percentage = selection_percentage  # Percentage of securities to select from the ranked list
-        self.grouping_column = grouping_column  # Column used to group the securities (e.g., sector, market cap)
 
     def trades(self, sim):
-        trades = Trades.timeframe_trades(sim.copy(), factor=self.ranking_metric,timeframe=self.timeframe, group=self.grouping_column,risk=self.risk_type)
+        trades = self.timeframe_trades(sim.copy())
         trades = trades.sort_values(self.ranking_metric)
         trades["risk"] = trades[self.risk_type.label]
-        trades = trades.groupby(["year", self.timeframe,self.grouping_column], group_keys=False).apply(
+        trades = trades.groupby(["year", self.timeframe,self.grouping_type.value], group_keys=False).apply(
             lambda group: self.selection_type.select(group, self.selection_percentage,self.position_type),
             include_groups=False
         ).reset_index(drop=True)
@@ -39,7 +39,8 @@ class Portfolio(object):
         query[self.grouping_type.value] = "first"
         query[self.ranking_metric] = "first"
         query[self.risk_type.label] = "first"
-        query[self.selection_type.label] = "first"
+        if self.allocation_type.label != "equal":
+            query[self.allocation_type.label] = "first"
         timeframe_sim = sim.groupby(["year",self.timeframe,"ticker"]).agg(query).reset_index().sort_values("date")
         if self.timeframe=="week":
             timeframe_sim = timeframe_sim[(timeframe_sim[self.timeframe] != 1) & (timeframe_sim[self.timeframe] < 52)].sort_values("date")
@@ -61,9 +62,12 @@ class Portfolio(object):
     def to_dict(self):
         """
         Custom method to serialize the object as a dictionary, replacing
-        class strings with enum labels for specific attributes.
+        class strings with enum labels or names/values when labels are unavailable.
         """
         return {
-            key: (value.label if isinstance(value, Enum) else value)
+            key: (
+                getattr(value, "label", None) or getattr(value, "name", None) or value.value
+                if isinstance(value, Enum) else value
+            )
             for key, value in self.__dict__.items()
         }

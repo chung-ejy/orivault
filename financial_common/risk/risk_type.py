@@ -27,9 +27,10 @@ class CoefficientOfVariation:
         df.sort_values("date",inplace=True)
         df["coefficient_of_variation"] = df["adjclose"].rolling(100).std() / df["adjclose"].rolling(100).mean()
         return df
+    
 class Drawdown:
     @staticmethod
     def apply(df):
         df.sort_values("date",inplace=True)
-        df["drawndown"] = (df["adjclose"] / df["adjclose"].rolling(100).max()).rolling(10).min() 
+        df["drawdown"] = (df["adjclose"] / df["adjclose"].rolling(100).max()).rolling(10).min() 
         return df

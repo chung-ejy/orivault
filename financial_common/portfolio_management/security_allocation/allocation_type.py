@@ -5,6 +5,7 @@ class AllocationType(Enum):
     EQUAL = ("equal", lambda: EqualAllocation())
     MARKET_CAP = ("market_cap", lambda: MarketCapAllocation())
     RISK = ("risk",lambda: RiskAllocation())
+    RANK = ("rank", lambda: RankAllocation())
 
     def __init__(self, label, allocation_method):
         self.label = label
@@ -42,5 +43,19 @@ class RiskAllocation:
         total_beta = group["risk"].sum()
         weights = list((group["risk"] / total_beta).values)
         weights.reverse()
+        group["weight"] = weights
+        return group
+
+class RankAllocation:
+    @staticmethod
+    def allocate(group):
+        # Assume the group DataFrame is already sorted by rank.
+        ranks = range(1, len(group) + 1)  # Create a sequence of ranks (1, 2, 3, ...)
+        total_weight = sum(1 / rank for rank in ranks)  # Calculate the sum of inverse ranks.
+        
+        # Calculate weights based on the inverse of the rank.
+        weights = [(1 / rank) / total_weight for rank in ranks]
+        
+        # Assign weights to the group DataFrame.
         group["weight"] = weights
         return group

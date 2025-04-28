@@ -22,7 +22,8 @@ class Portfolio(object):
         trades = self.timeframe_trades(sim.copy())
         trades["risk"] = trades[self.risk_type.label]
         trades = trades.sort_values(self.ranking_metric)
-        trades = trades.groupby(["year", self.timeframe,self.grouping_type.value], group_keys=False).apply(
+        trades["major_key"] = trades["year"].astype(str) + trades[self.timeframe].astype(str) + trades[self.grouping_type.value]
+        trades = trades.groupby(["major_key"], group_keys=False).apply(
             lambda group: self.selection_type.select(group, self.selection_percentage,self.position_type),
             include_groups=False
         ).reset_index(drop=True)
@@ -39,7 +40,7 @@ class Portfolio(object):
         query[self.grouping_type.value] = "first"
         query[self.ranking_metric] = "first"
         query[self.risk_type.label] = "first"
-        if self.allocation_type.label != "equal" and self.allocation_type.label != "risk":
+        if self.allocation_type.label == "market_cap":
             query[self.allocation_type.label] = "first"
         timeframe_sim = sim.groupby(["year",self.timeframe,"ticker"]).agg(query).reset_index().sort_values("date")
         if self.timeframe=="week":

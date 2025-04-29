@@ -51,7 +51,6 @@ class TopSelection:
         trades["position_type"] = position_type.portfolio_effect
         return trades
 
-
 class BottomSelection:
     @staticmethod
     def select(group, percentage, position_type):

@@ -122,13 +122,13 @@ class OBVIndicator:
     @staticmethod
     def calculate(price, timeframe, live):
         cols = Indicator.get_columns(live)
-        return (np.sign(price[cols["price"]].diff()) * price[cols["volume"]]).cumsum()
+        return (np.sign(price[cols["price"]].diff()) * price[cols["volume"]]).rolling(timeframe).cumsum()
 
 class VWAPIndicator:
     @staticmethod
     def calculate(price, timeframe, live):
         cols = Indicator.get_columns(live)
-        return (price[cols["price"]] * price[cols["volume"]]).cumsum() / price[cols["volume"]].cumsum()
+        return (price[cols["price"]] * price[cols["volume"]]).rolling(timeframe).cumsum() / price[cols["volume"]].rolling(timeframe).cumsum()
 
 class MarketImpactIndicator:
     @staticmethod

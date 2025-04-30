@@ -21,7 +21,7 @@ class Portfolio(object):
     def trades(self, sim):
         trades = self.timeframe_trades(sim.copy())
         trades["risk"] = trades[self.risk_type.label]
-        trades = trades.sort_values(self.ranking_metric)
+        trades = trades.sort_values(self.ranking_metric,ascending=False)
         trades["major_key"] = trades["year"].astype(str) + trades[self.timeframe].astype(str) + trades[self.grouping_type.value]
         trades = trades.groupby(["major_key"], group_keys=False).apply(
             lambda group: self.selection_type.select(group, self.selection_percentage,self.position_type),

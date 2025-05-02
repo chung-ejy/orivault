@@ -1,8 +1,10 @@
 from enum import Enum
 import numpy as np
 
-class AllocationType(Enum):
+class OptimizationAllocationType(Enum):
     EQUAL = ("equal", lambda: EqualAllocation())
+    MARKET_CAP = ("market_cap", lambda: MarketCapAllocation())
+    RISK = ("risk",lambda: RiskAllocation())
 
     def __init__(self, label, allocation_method):
         self.label = label
@@ -25,4 +27,19 @@ class EqualAllocation:
     def allocate(trades):
         """allocate a symmetric subset of rows from the trades based on percentage."""
         trades["weight"] = 1
+        return trades
+
+class MarketCapAllocation:
+    @staticmethod
+    def allocate(trades):
+        trades["group_market_cap"] = trades.groupby("date")["market_cap"].sum()
+        trades["weight"] = trades["market_cap"] / trades["group_market_cap"]
+        return trades
+    
+class RiskAllocation:
+    @staticmethod
+    def allocate(trades):
+        trades["risk"] = 1 / trades["risk"]
+        trades["group_risk"] = trades.groupby("date")["risk"].sum()   
+        trades["weight"] = trades["risk"] / trades["group_risk"] 
         return trades

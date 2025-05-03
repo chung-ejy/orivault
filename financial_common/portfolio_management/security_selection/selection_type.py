@@ -1,18 +1,21 @@
 from enum import Enum
 import numpy as np
+import pandas as pd
 
 class SelectionType(Enum):
     MIXED = ("mixed", lambda: MixedSelection())
     TOP = ("top", lambda: TopSelection())
     BOTTOM = ("bottom", lambda: BottomSelection())
+    LONGSHORT = ("long_short", lambda: LongShortSelection())  # Placeholder for long/short selection
 
     def __init__(self, label, selection_method):
         self.label = label
         self.selection_method = selection_method
 
-    def select(self, group, percentage, position_type):
+    def select(self, trades, percentage, position_type):
         """Invoke the associated selection method."""
-        return self.selection_method().select(group, percentage, position_type)
+        # Get max index within each group and broadcast it for each row
+        return self.selection_method().select(trades, percentage, position_type)
     
     @classmethod
     def selection_type_factory(cls, selection_type):
@@ -24,38 +27,34 @@ class SelectionType(Enum):
 
 class MixedSelection:
     @staticmethod
-    def select(group, percentage, position_type):
-        """Select a symmetric subset of rows from the group based on percentage."""
-        def mixed_allocation_percentage(n, percentage):
-            k = max(1, int(n * percentage))  # Total rows to select
-            if k >= n:
-                return np.arange(n)  # Take all if percentage >= 1
-            mid = k // 2
-            arr = np.arange(-mid, mid + 1) if k % 2 == 1 else np.delete(np.arange(-mid, mid + 1), mid)
-            return arr
-        
-        idx = mixed_allocation_percentage(len(group), percentage)
-        selected_indices = group.index[idx % len(group)]  # Handle negative indexing safely
-        group = group.loc[selected_indices].reset_index(drop=True)
-        group["position_type"] = group.index < int(group.index.size / 2)
-        group["position_type"] = group["position_type"].map(lambda x: position_type.portfolio_effect if x else position_type.portfolio_effect * -1)
-        return group 
-
+    def select(trades, percentage, position_type):
+        # Compute indices within each group
+        filtered = pd.concat([trades.groupby("major_key").first(),trades.groupby("major_key").last()])
+        # Assign position type within grouping phase, avoiding post-processing
+        filtered["position_type"] = position_type.portfolio_effect
+        return filtered
+    
+class LongShortSelection:
+    @staticmethod
+    def select(trades, percentage, position_type):
+        # Compute indices within each group
+        top = trades.groupby("major_key").first()
+        top["position_type"] = position_type.portfolio_effect
+        bottom = trades.groupby("major_key").last()
+        bottom["position_type"] = -position_type.portfolio_effect
+        filtered = pd.concat([top,bottom])
+        return filtered
 
 class TopSelection:
     @staticmethod
-    def select(group, percentage, position_type):
-        """Select the top subset of rows from the group based on percentage."""
-        n_rows = max(1, int(len(group) * percentage))
-        trades = group.head(n_rows).reset_index(drop=True)
-        trades["position_type"] = position_type.portfolio_effect
-        return trades
+    def select(trades, percentage, position_type):
+        top = trades.groupby("major_key").first()
+        top["position_type"] = position_type.portfolio_effect
+        return top
 
 class BottomSelection:
     @staticmethod
-    def select(group, percentage, position_type):
-        """Select the bottom subset of rows from the group based on percentage."""
-        n_rows = max(1, int(len(group) * percentage))
-        trades = group.tail(n_rows).reset_index(drop=True)
-        trades["position_type"] = position_type.portfolio_effect
-        return trades
+    def select(trades, percentage, position_type):
+        bottom = trades.groupby("major_key").last()
+        bottom["position_type"] = position_type.portfolio_effect
+        return bottom

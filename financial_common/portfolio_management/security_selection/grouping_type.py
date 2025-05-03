@@ -3,6 +3,7 @@ from enum import Enum
 class GroupingType(Enum):
     SIC_DESCRIPTION = "sic_description"  
     OFFICE =  "office"
+    ASSET_CLASS = "asset_class"
 
     @classmethod
     def get_grouping_type(cls, position_label):

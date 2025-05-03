@@ -5,7 +5,7 @@ project_root = os.path.abspath(os.path.join(os.getcwd(), ''))
 sys.path.append(project_root)
 COMMON_PATH = os.path.join(project_root, 'common')
 
-from datetime import datetime, timedelta
+from common.extractor.alpaca_extractor import AlpacaExtractor
 from common.processor.processor import Processor as p
 from common.database.adatabase import ADatabase
 from common.extractor.polygon_extractor import PolygonExtractor
@@ -17,11 +17,14 @@ import pandas as pd
 import os
 load_dotenv()
 
+alp = AlpacaExtractor()
 market = ADatabase("market")
 poly = PolygonExtractor()
 ticker_overviews = []
 
-## Download current stocks
+alpaca_tickers = pd.DataFrame(alp.assets()).rename(columns={"symbol":"ticker"})
+relevant_tickers = alpaca_tickers[(alpaca_tickers["tradable"]==True) & (~alpaca_tickers["exchange"].isin(["OTC","CRYPTO"]))].copy()[["ticker","fractionable","exchange"]]
+# Download current stocks
 ticker_info = poly.ticker_info()
 ticker_infos = []
 ticker_infos.extend(ticker_info["results"])
@@ -37,7 +40,7 @@ for i in range(20):
         sleep(20)
     except Exception as e:
         print(str(e))
-index = pd.DataFrame(ticker_infos).sort_values("ticker")
+index = pd.DataFrame(ticker_infos).sort_values("ticker").merge(relevant_tickers, on="ticker", how="right").dropna()
 prices = []
 
 market.connect()

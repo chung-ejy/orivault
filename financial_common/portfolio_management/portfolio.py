@@ -6,6 +6,7 @@ from financial_common.assets.position_type import PositionType
 from scipy.stats.mstats import winsorize
 from common.processor.processor import Processor as p
 from enum import Enum
+
 class Portfolio(object):
 
     def __init__(self, timeframe, ranking_metric, position_type, grouping_type, selection_type,  allocation_type, risk_type, selection_percentage):
@@ -16,18 +17,12 @@ class Portfolio(object):
         self.selection_type = SelectionType.selection_type_factory(selection_type)
         self.allocation_type = AllocationType.allocation_type_factory(allocation_type)
         self.risk_type = RiskType.risk_type_factory(risk_type)
-        self.selection_percentage = selection_percentage  # Percentage of securities to select from the ranked list
+        self.selection_percentage = selection_percentage  # Percentage of securities to select
 
     def trades(self, sim):
         trades = self.timeframe_trades(sim.copy())
-        trades["risk"] = trades[self.risk_type.label]
-        trades = trades.sort_values(self.ranking_metric)
-        trades["major_key"] = trades["year"].astype(str) + trades[self.timeframe].astype(str) + trades[self.grouping_type.value]
-        trades = trades.groupby(["major_key"], group_keys=False).apply(
-            lambda group: self.selection_type.select(group, self.selection_percentage,self.position_type),
-            include_groups=False
-        ).reset_index(drop=True)
-        trades = trades.groupby(["date"],group_keys=False).apply(lambda group: self.allocation_type.allocate(group),include_groups=True).reset_index(drop=True)
+        trades = self.selection_type.select(trades, self.selection_percentage, self.position_type)
+        trades = self.allocation_type.allocate(trades)
         trades["unweighted_return"] = (trades["sell_price"] / trades["adjclose"] - 1) * trades["position_type"] + 1
         trades["winsorized_return"] = winsorize(trades["unweighted_return"], [0.05, 0.05])
         trades["return"] = (trades["winsorized_return"] - 1) * trades["weight"] + 1
@@ -45,6 +40,13 @@ class Portfolio(object):
         timeframe_sim = sim.groupby(["year",self.timeframe,"ticker"]).agg(query).reset_index().sort_values("date")
         if self.timeframe=="week":
             timeframe_sim = timeframe_sim[(timeframe_sim[self.timeframe] != 1) & (timeframe_sim[self.timeframe] < 52)].sort_values("date")
+        timeframe_sim["risk"] = timeframe_sim[self.risk_type.label]
+        # Sort by ranking metric, handling NaNs properly
+        timeframe_sim = timeframe_sim.sort_values(self.ranking_metric, ascending=False, na_position="last")
+
+        # Convert values to strings before concatenation for safety
+        timeframe_sim["major_key"] = timeframe_sim[["year", self.timeframe, self.grouping_type.value]].astype(str).agg("".join, axis=1)
+
         return timeframe_sim
     
     def portfolio(self, trades, benchmark):

@@ -38,9 +38,9 @@ class Indicator(Enum):
         if live:
             return {
                 "price": "adjclose",
-                "high": "adjhigh",
-                "low": "adjlow",
-                "volume": "adjvolume"
+                "high": "high",
+                "low": "low",
+                "volume": "volume"
             }
         else:
             return {

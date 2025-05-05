@@ -29,6 +29,14 @@ class Portfolio(object):
         trades["return"] = (trades["winsorized_return"] - 1) * trades["weight"] + 1
         return trades
     
+    def recs(self,sim):
+        todays_sim = sim[sim["date"] == sim["date"].max()]
+        todays_sim["major_key"] = todays_sim[["year", self.timeframe.value, self.grouping_type.value]].astype(str).agg("".join, axis=1)
+        todays_sim["risk"] = todays_sim[self.risk_type.label]
+        trades = self.selection_type.select(todays_sim, self.selection_percentage, self.position_type)
+        trades = self.allocation_type.allocate(trades)
+        return trades
+    
     def timeframe_trades(self,sim):
         sim["sell_price"] = sim["adjclose"]
         sim["sell_date"] = sim["date"]
@@ -38,15 +46,15 @@ class Portfolio(object):
         query[self.risk_type.label] = "first"
         if self.allocation_type.label == "market_cap":
             query[self.allocation_type.label] = "first"
-        timeframe_sim = sim.groupby(["year",self.timeframe,"ticker"]).agg(query).reset_index().sort_values("date")
-        if self.timeframe=="week":
-            timeframe_sim = timeframe_sim[(timeframe_sim[self.timeframe] != 1) & (timeframe_sim[self.timeframe] < 52)].sort_values("date")
+        timeframe_sim = sim.groupby(["year",self.timeframe.value,"ticker"]).agg(query).reset_index().sort_values("date")
+        if self.timeframe.value=="week":
+            timeframe_sim = timeframe_sim[(timeframe_sim[self.timeframe.value] != 1) & (timeframe_sim[self.timeframe.value] < 52)].sort_values("date")
         timeframe_sim["risk"] = timeframe_sim[self.risk_type.label]
         # Sort by ranking metric, handling NaNs properly
         timeframe_sim = timeframe_sim.sort_values(self.ranking_metric, ascending=False, na_position="last")
 
         # Convert values to strings before concatenation for safety
-        timeframe_sim["major_key"] = timeframe_sim[["year", self.timeframe, self.grouping_type.value]].astype(str).agg("".join, axis=1)
+        timeframe_sim["major_key"] = timeframe_sim[["year", self.timeframe.value, self.grouping_type.value]].astype(str).agg("".join, axis=1)
 
         return timeframe_sim
     

@@ -19,7 +19,6 @@ orivault.cloud_connect()
 recommendations = orivault.retrieve("recommendations")
 orivault.disconnect()
 
-print(recommendations)
 if end.weekday() == 0:
     for row in recommendations.iterrows():
         ticker = str(row[1]["ticker"])
@@ -29,24 +28,23 @@ if end.weekday() == 0:
         adjclose = float(ticker_data["c"])
         allocation = round(cash*row[1]["weight"],2)
         qty = int(allocation/adjclose)
-        print(ticker,allocation,qty)
-        # if bool(asset_info["tradable"]) == False:
-        #     continue
-        # else:
-        #     if bool(asset_info["fractionable"]) == True:
-        #         if direction == 1:
-        #             print(alp.buy_fraction(ticker,allocation))
-        #         elif direction == -1:
-        #             print(alp.sell(ticker,allocation))
-        #         else:
-        #             print("invalid direction")
-        #     else:
-        #         if direction == 1:
-        #             print(alp.buy(ticker,qty))
-        #         elif direction == -1:
-        #             print(alp.sell(ticker,allocation))
-        #         else:
-        #             print("invalid direction")
+        if bool(asset_info["tradable"]) == False:
+            continue
+        else:
+            if bool(asset_info["fractionable"]) == True:
+                if direction == 1:
+                    print(alp.buy_fraction(ticker,allocation))
+                elif direction == -1:
+                    print(alp.sell(ticker,allocation))
+                else:
+                    print("invalid direction")
+            else:
+                if direction == 1:
+                    print(alp.buy(ticker,qty))
+                elif direction == -1:
+                    print(alp.sell(ticker,allocation))
+                else:
+                    print("invalid direction")
 elif end.weekday() == 4:
     alp.close()
 else:

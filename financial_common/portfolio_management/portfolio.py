@@ -33,6 +33,7 @@ class Portfolio(object):
         todays_sim = sim[sim["date"] == sim["date"].max()]
         todays_sim["major_key"] = todays_sim[["year", self.timeframe.value, self.grouping_type.value]].astype(str).agg("".join, axis=1)
         todays_sim["risk"] = todays_sim[self.risk_type.label]
+        todays_sim = todays_sim.sort_values(self.ranking_metric, ascending=False, na_position="last")
         trades = self.selection_type.select(todays_sim, self.selection_percentage, self.position_type)
         trades = self.allocation_type.allocate(trades)
         return trades

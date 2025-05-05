@@ -1,6 +1,7 @@
 from financial_common.portfolio_management.security_selection.selection_type import SelectionType
 from financial_common.portfolio_management.security_allocation.allocation_type import AllocationType
 from financial_common.portfolio_management.security_selection.grouping_type import GroupingType
+from financial_common.assets.timeframe import Timeframe
 from financial_common.risk.risk_type import RiskType
 from financial_common.assets.position_type import PositionType
 from scipy.stats.mstats import winsorize
@@ -10,8 +11,8 @@ from enum import Enum
 class Portfolio(object):
 
     def __init__(self, timeframe, ranking_metric, position_type, grouping_type, selection_type,  allocation_type, risk_type, selection_percentage):
-        self.timeframe = timeframe  # Timeframe of the assets (e.g., week, month, quarter)
         self.ranking_metric = ranking_metric  # Metric used to rank the securities
+        self.timeframe = Timeframe.timeframe_factory(timeframe)  # Timeframe of the assets (e.g., week, month, quarter)
         self.position_type = PositionType.get_position_type(position_type)
         self.grouping_type = GroupingType.get_grouping_type(grouping_type)  # Type of grouping (e.g., sector, industry)
         self.selection_type = SelectionType.selection_type_factory(selection_type)

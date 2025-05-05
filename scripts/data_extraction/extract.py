@@ -29,7 +29,9 @@ end = datetime.now()
 start = (datetime.now() - timedelta(days=365.25*years))
 
 market.connect()
+index = market.retrieve("ticker_overview")
 market.drop("prices")
+
 tickers = list(index["ticker"].unique())
 for ticker in tqdm(tickers):
     try:

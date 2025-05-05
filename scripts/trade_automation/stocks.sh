@@ -1,4 +1,4 @@
 
-python security_info.py
-python stock_recs.py
-python alpaca_stocks.py
+python ./scripts/trade_automation/security_info.py
+python ./scripts/trade_automation/stock_recs.py
+python ./scripts/trade_automation/alpaca_stocks.py

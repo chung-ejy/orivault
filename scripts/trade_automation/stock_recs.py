@@ -40,7 +40,7 @@ if datetime.now().weekday() == 0: # Monday
     start = (end - timedelta(days=200))
 
     prices = []
-    for ticker in index["ticker"]: 
+    for ticker in index["ticker"][:10]: 
         try:
             price = alp.prices(ticker,start,end)
             price = p.lower_column(price)

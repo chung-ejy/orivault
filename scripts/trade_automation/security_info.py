@@ -45,7 +45,7 @@ for i in range(20):
 index = pd.DataFrame(ticker_infos).sort_values("ticker").merge(relevant_tickers, on="ticker", how="right").dropna()
 prices = []
 
-market.connect()
+market.cloud_connect()
 market.drop("ticker_overview")
 tickers = list(index["ticker"].unique())
 for ticker in tqdm(tickers):
@@ -71,7 +71,7 @@ def extract_ticker(s):
 index['ticker'] = index['Name'].apply(extract_ticker)
 index["market_cap"] = [int(x.split("$")[2].replace(",","")) if type(x) == str else 550000000 for x in index["Market Cap"]]
 
-market.connect()
+market.cloud_connect()
 market.drop("cryptocurrencies")
 market.store("cryptocurrencies",index[["ticker","market_cap","industry"]])
 market.disconnect()

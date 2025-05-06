@@ -1,6 +1,6 @@
 import requests as r
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 load_dotenv()
 import os
@@ -169,13 +169,22 @@ class AlpacaExtractor(object):
         requestBody = r.post(url, json=data, headers=self.headers)
         return requestBody.json()
     
+    def orders(self):
+        params = {
+            "status":"closed",
+            "limit":500,
+            "after":(datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d"),
+            "until":(datetime.now()).strftime("%Y-%m-%d"),
+            "direction":"asc",
+            "nested":"false"
+                  }
+        url = f"{self.domain}/v2/orders"
+        requestBody = r.get(url,params=params,headers=self.headers)
+        return requestBody.json()
+    
     def close(self):
-        headers = {
-            'APCA-API-KEY-ID': self.key,
-            'APCA-API-SECRET-KEY': self.secret,
-            "accept":"application/json"
-        }
         params = {}
         url = f"{self.domain}/v2/positions?cancel_orders=true"
         requestBody = r.delete(url,params=params,headers=self.headers)
         return requestBody.json()
+    

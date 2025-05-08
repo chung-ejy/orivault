@@ -5,7 +5,9 @@ class Indicator(Enum):
     ROLLING_DOLLAR_VOLUME = ("rolling_dollar_volume", lambda: RollingDollarVolume())
     ADR = ("adr", lambda: ADRIndicator())
     SMA = ("sma", lambda: SMAIndicator())
+    SMACorr = ("sma_corr", lambda: SMAIndicator())
     EMA = ("ema", lambda: EMAIndicator())
+    EMACorr = ("ema_corr", lambda: EMAIndicator())
     BOLLINGER_UPPER = ("bollinger_upper", lambda: BollingerUpperIndicator())
     BOLLINGER_LOWER = ("bollinger_lower", lambda: BollingerLowerIndicator())
     MOMENTUM = ("momentum", lambda: MomentumIndicator())
@@ -77,12 +79,28 @@ class SMAIndicator:
         cols = Indicator.get_columns(live)
         return price[cols["price"]].rolling(timeframe).mean() / price[cols["price"]]
 
+class SMACorrIndicator:
+    @staticmethod
+    def calculate(price, timeframe, live):
+        cols = Indicator.get_columns(live)
+        rollings = price[cols["price"]].rolling(timeframe).mean() / price[cols["price"]]
+        rollings_corr = rollings.rolling(timeframe).corr(price[cols["price"]])
+        return rollings * rollings_corr
+    
 class EMAIndicator:
     @staticmethod
     def calculate(price, timeframe, live):
         cols = Indicator.get_columns(live)
         return price[cols["price"]].ewm(span=timeframe, adjust=False).mean() / price[cols["price"]]
 
+class EMACorrIndicator:
+    @staticmethod
+    def calculate(price, timeframe, live):
+        cols = Indicator.get_columns(live)
+        rollings = price[cols["price"]].ewm(span=timeframe, adjust=False).mean() / price[cols["price"]]
+        rollings_corr = rollings.rolling(timeframe).corr(price[cols["price"]])
+        return rollings * rollings_corr
+    
 class BollingerUpperIndicator:
     @staticmethod
     def calculate(price, timeframe, live):

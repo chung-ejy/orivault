@@ -32,14 +32,13 @@ class EqualAllocation:
 class MarketCapAllocation:
     @staticmethod
     def allocate(trades):
-        trades["group_market_cap"] = trades.groupby("date")["market_cap"].sum()
+        trades["group_market_cap"] = trades.groupby("date")["market_cap"].transform("sum")
         trades["weight"] = trades["market_cap"] / trades["group_market_cap"]
         return trades
     
 class RiskAllocation:
     @staticmethod
     def allocate(trades):
-        trades["risk"] = 1 / trades["risk"]
-        trades["group_risk"] = trades.groupby("date")["risk"].sum()   
+        trades["group_risk"] = trades.groupby("date")["risk"].transform("sum")
         trades["weight"] = trades["risk"] / trades["group_risk"] 
         return trades

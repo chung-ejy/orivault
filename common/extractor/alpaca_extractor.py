@@ -173,7 +173,7 @@ class AlpacaExtractor(object):
         params = {
             "status":"closed",
             "limit":500,
-            "after":(datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d"),
+            "after":(datetime.now() - timedelta(days=365*1.5)).strftime("%Y-%m-%d"),
             "until":(datetime.now()).strftime("%Y-%m-%d"),
             "direction":"asc",
             "nested":"false"

@@ -1,5 +1,7 @@
 from financial_common.portfolio_management.security_selection.selection_type import SelectionType
 from financial_common.portfolio_management.security_allocation.allocation_type import AllocationType
+from financial_common.portfolio_management.security_selection.optimization_selection_type import OptimizationSelectionType
+from financial_common.portfolio_management.security_allocation.optimization_allocation_type import OptimizationAllocationType
 from financial_common.portfolio_management.security_selection.grouping_type import GroupingType
 from financial_common.assets.timeframe import Timeframe
 from financial_common.risk.risk_type import RiskType
@@ -22,6 +24,19 @@ class Portfolio(object):
 
     def trades(self, sim):
         trades = self.timeframe_trades(sim.copy())
+        # # Compute group index efficiently
+        trades.reset_index(drop=True, inplace=True)
+        trades["group_idx"] = trades.groupby("major_key").cumcount() + 1
+        # Compute max index per group **without repeating groupby()**
+        trades.sort_values(self.ranking_metric, ascending=False, na_position="last",inplace=True)
+        group_max_idx = trades.groupby("major_key", as_index=False)["group_idx"].max().rename(columns={"group_idx": "group_idx_max"})
+        trades = trades.merge(group_max_idx, on="major_key", how="left")
+
+        # Ensure safe float division
+        trades["group_idx_max"] = trades["group_idx_max"].astype(float)
+
+        # Compute percentiles using safer rounding
+        trades["group_percentile"] = round(trades["group_idx"] / trades["group_idx_max"] * 1000) / 1000
         trades = self.selection_type.select(trades, self.selection_percentage, self.position_type)
         trades = self.allocation_type.allocate(trades)
         trades["unweighted_return"] = (trades["sell_price"] / trades["adjclose"] - 1) * trades["position_type"] + 1
@@ -84,3 +99,20 @@ class Portfolio(object):
             )
             for key, value in self.__dict__.items()
         }
+    @staticmethod
+    def from_dict(data):
+        return Portfolio(timeframe=data["timeframe"].lower(), ranking_metric=data["ranking_metric"], position_type=data["position_type"], grouping_type=data["grouping_type"].lower(), selection_type=data["selection_type"], allocation_type=data["allocation_type"], risk_type=data["risk_type"], selection_percentage=data["selection_percentage"])
+
+class OptimizedPortfolio(Portfolio):
+    """
+    Optimized Portfolio class that inherits from Portfolio.
+    This class is used for creating optimized portfolios based on the given parameters.
+    """
+    def __init__(self, timeframe, ranking_metric, position_type, grouping_type, selection_type, allocation_type, risk_type, selection_percentage):
+        super().__init__(timeframe, ranking_metric, position_type, grouping_type, selection_type, allocation_type, risk_type, selection_percentage)
+        self.selection_type = OptimizationSelectionType.selection_type_factory(selection_type)
+        self.allocation_type = OptimizationAllocationType.allocation_type_factory(allocation_type)
+    
+    @staticmethod
+    def from_dict(data):
+        return OptimizedPortfolio(timeframe=data["timeframe"].lower(), ranking_metric=data["ranking_metric"], position_type=data["position_type"], grouping_type=data["grouping_type"].lower(), selection_type=data["selection_type"], allocation_type=data["allocation_type"], risk_type=data["risk_type"], selection_percentage=data["selection_percentage"])

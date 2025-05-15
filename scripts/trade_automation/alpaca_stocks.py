@@ -17,6 +17,7 @@ account = alp.account()
 cash = round(float(account["cash"]),2)
 orivault.cloud_connect()
 recommendations = orivault.retrieve("recommendations")
+results = orivault.retrieve("results").to_dict("records")[0]
 orivault.disconnect()
 
 if end.weekday() == 0:
@@ -26,7 +27,7 @@ if end.weekday() == 0:
         asset_info = alp.asset_info(ticker)
         ticker_data = alp.latest_bar(ticker)
         adjclose = float(ticker_data["c"])
-        allocation = round(cash*row[1]["weight"],2)
+        allocation = round(cash*row[1]["weight"],2) - 0.01 if results["allocation_type"] != "equal" else round(cash/recommendations.index.size,2) - 0.01
         qty = int(allocation/adjclose)
         if bool(asset_info["tradable"]) == False:
             continue

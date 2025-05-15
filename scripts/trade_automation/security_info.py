@@ -26,37 +26,13 @@ alp = AlpacaExtractor(paper=False)
 coinbase = CoinbaseExtractor()
 ticker_overviews = []
 if datetime.now().weekday() == 6:
-    # alpaca_tickers = pd.DataFrame(alp.assets()).rename(columns={"symbol":"ticker"})
-    # relevant_tickers = alpaca_tickers[(alpaca_tickers["tradable"]==True) & (~alpaca_tickers["exchange"].isin(["OTC","CRYPTO"]))].copy()[["ticker","fractionable","exchange"]]
-    # # Download current stocks
-    # ticker_info = poly.ticker_info()
-    # ticker_infos = []
-    # ticker_infos.extend(ticker_info["results"])
-    # for i in range(20):
-    #     try:
-    #         if "next_url" in ticker_info:
-    #             next_url = ticker_info["next_url"]
-    #         else:
-    #             break
-    #         ticker_info = r.get(next_url+f"&apiKey={poly.key}").json()
-    #         ticker_infos.extend(ticker_info["results"])
-    #         sleep(20)
-    #     except Exception as e:
-    #         print(str(e))
-    # index = pd.DataFrame(ticker_infos).sort_values("ticker").merge(relevant_tickers, on="ticker", how="right").dropna()
-    # prices = []
+    alpaca_tickers = pd.DataFrame(alp.assets()).rename(columns={"symbol":"ticker"})
+    relevant_tickers = alpaca_tickers[(alpaca_tickers["tradable"]==True) & (~alpaca_tickers["exchange"].isin(["OTC","CRYPTO"]))].copy()[["ticker","fractionable","exchange"]]
 
-    # market.cloud_connect()
-    # market.drop("ticker_overview")
-    # tickers = list(index["ticker"].unique())
-    # for ticker in tqdm(tickers):
-    #     try:
-    #         ticker_data = poly.ticker_overview(ticker)["results"]
-    #         market.store("ticker_overview",pd.DataFrame([ticker_data]))
-    #         sleep(12)
-    #     except Exception as e:
-    #         print(str(e))
-    # market.disconnect()
+    market.cloud_connect()
+    market.drop("ticker_overview")
+    market.store("ticker_overview",relevant_tickers)
+    market.disconnect()
 
     index = pd.read_html("https://coinmarketcap.com/")[0][["Name","Market Cap"]]
     index["industry"] = "crypto"

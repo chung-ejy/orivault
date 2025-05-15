@@ -9,6 +9,8 @@ from financial_common.assets.position_type import PositionType
 from scipy.stats.mstats import winsorize
 from common.processor.processor import Processor as p
 from enum import Enum
+import warnings
+warnings.simplefilter(action='ignore')
 
 class Portfolio(object):
 
@@ -24,19 +26,8 @@ class Portfolio(object):
 
     def trades(self, sim):
         trades = self.timeframe_trades(sim.copy())
-        # # Compute group index efficiently
-        trades.reset_index(drop=True, inplace=True)
-        trades["group_idx"] = trades.groupby("major_key").cumcount() + 1
-        # Compute max index per group **without repeating groupby()**
-        trades.sort_values(self.ranking_metric, ascending=False, na_position="last",inplace=True)
-        group_max_idx = trades.groupby("major_key", as_index=False)["group_idx"].max().rename(columns={"group_idx": "group_idx_max"})
-        trades = trades.merge(group_max_idx, on="major_key", how="left")
-
-        # Ensure safe float division
-        trades["group_idx_max"] = trades["group_idx_max"].astype(float)
-
-        # Compute percentiles using safer rounding
-        trades["group_percentile"] = round(trades["group_idx"] / trades["group_idx_max"] * 1000) / 1000
+        trades = self.percentile_labeling(trades)
+        trades.rename(columns={self.risk_type.label: "risk"}, inplace=True)
         trades = self.selection_type.select(trades, self.selection_percentage, self.position_type)
         trades = self.allocation_type.allocate(trades)
         trades["unweighted_return"] = (trades["sell_price"] / trades["adjclose"] - 1) * trades["position_type"] + 1
@@ -46,9 +37,8 @@ class Portfolio(object):
     
     def recs(self,sim):
         todays_sim = sim[sim["date"] == sim["date"].max()]
-        todays_sim["major_key"] = todays_sim[["year", self.timeframe.value, self.grouping_type.value]].astype(str).agg("".join, axis=1)
-        todays_sim["risk"] = todays_sim[self.risk_type.label]
-        todays_sim = todays_sim.sort_values(self.ranking_metric, ascending=False, na_position="last")
+        todays_sim = self.percentile_labeling(todays_sim)
+        todays_sim.rename(columns={self.risk_type.label: "risk"}, inplace=True)
         trades = self.selection_type.select(todays_sim, self.selection_percentage, self.position_type)
         trades = self.allocation_type.allocate(trades)
         return trades
@@ -64,15 +54,28 @@ class Portfolio(object):
             query[self.allocation_type.label] = "first"
         timeframe_sim = sim.groupby(["year",self.timeframe.value,"ticker"]).agg(query).reset_index().sort_values("date")
         if self.timeframe.value=="week":
-            timeframe_sim = timeframe_sim[(timeframe_sim[self.timeframe.value] != 1) & (timeframe_sim[self.timeframe.value] < 52)].sort_values("date")
-        timeframe_sim["risk"] = timeframe_sim[self.risk_type.label]
-        # Sort by ranking metric, handling NaNs properly
-        timeframe_sim = timeframe_sim.sort_values(self.ranking_metric, ascending=False, na_position="last")
-
-        # Convert values to strings before concatenation for safety
-        timeframe_sim["major_key"] = timeframe_sim[["year", self.timeframe.value, self.grouping_type.value]].astype(str).agg("".join, axis=1)
-
+            timeframe_sim = timeframe_sim[(timeframe_sim[self.timeframe.value] != 1) & (timeframe_sim[self.timeframe.value] < 52)].sort_values("date")    
         return timeframe_sim
+    
+    def percentile_labeling(self,sim):
+        """
+        This function computes the percentile ranking of a given metric within a specified grouping.
+        It returns the DataFrame with an additional column for the percentile rank.
+        """
+        sim["major_key"] = sim[["year", self.timeframe.value, self.grouping_type.value]].astype(str).agg("".join, axis=1)
+        sim.reset_index(drop=True, inplace=True)
+        # Compute max index per group **without repeating groupby()**
+        sim.sort_values(self.ranking_metric, ascending=False, na_position="last",inplace=True)
+        sim["group_idx"] = sim.groupby("major_key").cumcount() + 1
+        group_max_idx = sim.groupby("major_key", as_index=False)["group_idx"].max().rename(columns={"group_idx": "group_idx_max"})
+        sim = sim.merge(group_max_idx, on="major_key", how="left")
+
+        # Ensure safe float division
+        sim["group_idx_max"] = sim["group_idx_max"].astype(float)
+
+        # Compute percentiles using safer rounding
+        sim["group_percentile"] = round(sim["group_idx"] / sim["group_idx_max"] * 1000) / 1000
+        return sim
     
     def portfolio(self, trades, benchmark):
         # Portfolio calculations

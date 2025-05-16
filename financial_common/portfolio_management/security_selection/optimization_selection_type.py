@@ -28,7 +28,7 @@ class MixedSelection:
     @staticmethod
     def select(trades, percentage, position_type):
         # Compute indices within each group
-        trades["selection"] = (abs(trades["group_percentile"] - 0.5) > (0.5 - percentage))
+        trades["selection"] = (abs(trades["rank_percentile"] - 0.5) >= (0.5 - percentage))
         
         # Filter trades based on mask and reset index
         filtered = trades[trades["selection"]==True].reset_index(drop=True)
@@ -40,7 +40,7 @@ class LongShortSelection:
     @staticmethod
     def select(trades, percentage, position_type):
         # Compute selection mask
-        trades["selection"] = abs(trades["group_percentile"] - 0.5) > (0.5 - percentage)
+        trades["selection"] = abs(trades["rank_percentile"] - 0.5) >= (0.5 - percentage)
         
         # Filter trades based on selection mask
         filtered = trades[trades["selection"]].copy()  # Use .copy() to avoid SettingWithCopyWarning
@@ -48,7 +48,7 @@ class LongShortSelection:
 
         # Assign position type based on percentile
         filtered["position_type"] = np.where(
-            filtered["group_percentile"] < 0.5, 
+            filtered["rank_percentile"] < 0.5, 
             position_type.portfolio_effect, 
             -position_type.portfolio_effect
         )
@@ -59,7 +59,7 @@ class TopSelection:
     @staticmethod
     def select(trades, percentage, position_type):
         """Select the top subset of rows from the group based on percentage."""
-        trades["selection"] = (trades["group_percentile"] < percentage)
+        trades["selection"] = (trades["rank_percentile"] <= percentage)
         
         # Filter trades based on mask and reset index
         filtered = trades[trades["selection"]==True].reset_index(drop=True)
@@ -70,7 +70,7 @@ class BottomSelection:
     @staticmethod
     def select(trades, percentage, position_type):
         """Select the top subset of rows from the group based on percentage."""
-        trades["selection"] = (trades["group_percentile"] > (1 - percentage))
+        trades["selection"] = (trades["rank_percentile"] >= (1 - percentage))
         
         # Filter trades based on mask and reset index
         filtered = trades[trades["selection"]==True].reset_index(drop=True)

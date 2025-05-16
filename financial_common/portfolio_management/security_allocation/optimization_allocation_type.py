@@ -3,7 +3,6 @@ import numpy as np
 
 class OptimizationAllocationType(Enum):
     EQUAL = ("equal", lambda: EqualAllocation())
-    MARKET_CAP = ("market_cap", lambda: MarketCapAllocation())
     RISK = ("risk",lambda: RiskAllocation())
 
     def __init__(self, label, allocation_method):
@@ -27,13 +26,6 @@ class EqualAllocation:
     def allocate(trades):
         """allocate a symmetric subset of rows from the trades based on percentage."""
         trades["weight"] = 1
-        return trades
-
-class MarketCapAllocation:
-    @staticmethod
-    def allocate(trades):
-        trades["group_market_cap"] = trades.groupby("date")["market_cap"].transform("sum")
-        trades["weight"] = trades["market_cap"] / trades["group_market_cap"]
         return trades
     
 class RiskAllocation:

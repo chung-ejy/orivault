@@ -1,9 +1,8 @@
 from enum import Enum
 
 class GroupingType(Enum):
-    SIC_DESCRIPTION = "sic_description"  
-    OFFICE =  "office"
-    ASSET_CLASS = "asset_class"
+    STANDARD_DEV = "standard_dev"  
+    AVERAGE_RETURN =  "average_return"
 
     @classmethod
     def get_grouping_type(cls, position_label):

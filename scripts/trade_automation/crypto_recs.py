@@ -14,7 +14,7 @@ from financial_common.risk.single_index_capm import SingleIndexCAPM
 from financial_common.indicator.indicator import Indicator
 from financial_common.risk.risk_type import RiskType
 from financial_common.risk.benchmark import Benchmark
-from financial_common.portfolio_management.metrics import Metrics
+from financial_common.portfolio_management.kpi import Metrics
 from financial_common.portfolio_management.portfolio_selection import PortfolioSelection
 from financial_common.portfolio_management.portfolio import Portfolio
 import numpy as np

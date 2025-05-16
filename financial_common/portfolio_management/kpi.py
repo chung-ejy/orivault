@@ -1,4 +1,4 @@
-class Metrics:
+class KPI:
     @staticmethod
     def performance(trades, portfolio, rolling_window=10):
         """

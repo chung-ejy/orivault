@@ -5,7 +5,7 @@ class Metric(Enum):
     AVERAGE_RETURN = ("average_return", lambda: AverageReturn())
     STANDARD_DEV = ("standard_dev", lambda: StandardDev())
     ROLLING_DOLLAR_VOLUME = ("rolling_dollar_volume", lambda: RollingDollarVolume())
-    
+    SIMPLE_MOVING_AVERAGE = ("simple_moving_average", lambda: SimpleMovingAverage())
     def __init__(self, label, calculation_method):
         self.label = label
         self.calculation_method = calculation_method
@@ -47,7 +47,13 @@ class Metric(Enum):
 
     def __str__(self):
         return self.label
-    
+
+class SimpleMovingAverage:
+    @staticmethod
+    def calculate(price, timeframe, live):
+        cols = Metric.get_columns(live)
+        return price[cols["price"]].rolling(window=timeframe).mean()
+        
 class AverageReturn:
     @staticmethod
     def calculate(price, timeframe, live):

@@ -34,12 +34,12 @@ def generate_client_order_id(prefix: str = "order") -> str:
     client_order_id = f"{prefix}_{timestamp}_{unique_id}"
     return client_order_id
 
-if datetime.now().weekday() == 0:
+if datetime.now().weekday() == 4:
     ori = ADatabase("ori")
     extractor = CoinbaseExtractor()
 
     ori.cloud_connect()
-    recs = ori.retrieve("crypto_recommendations")
+    recs = ori.retrieve("crypto_recommendations").sort_values("group_percentile",ascending=False).head(10)
     top = ori.retrieve("crypto_results").to_dict("records")[0]
     ori.disconnect()
 
@@ -51,7 +51,6 @@ if datetime.now().weekday() == 0:
     for crypto_position in crypto_positions:
         amount = float(crypto_position.available_to_trade_crypto)
         ticker = crypto_position.asset + "-USD"
-        print("sell",ticker,amount)
         sell_order_id = generate_client_order_id()
         extractor.client.market_order_sell(client_order_id=sell_order_id,product_id=ticker,base_size=str(amount))
 
@@ -60,12 +59,15 @@ if datetime.now().weekday() == 0:
     positions = portfolio["breakdown"].spot_positions
     cash_position = [x for x in positions if x.asset == "USD" ][0]
     cash = float(cash_position.available_to_trade_crypto)
-
     for row in recs.iterrows():
-        ticker = row[1]["ticker"]
-        allocation = round(cash*row[1]["weight"],2) if top["allocation_type"] != "equal" else round(cash/recs.index.size,2)
-        buy_order_id = generate_client_order_id()
-        if row[1]["position_type"] == 1:
-            extractor.client.market_order_buy(client_order_id=buy_order_id,product_id=ticker,quote_size=str(allocation))
-        else:
-            extractor.client.market_order_sell(client_order_id=buy_order_id,product_id=ticker,quote_size=str(allocation))
+        try:
+            ticker = row[1]["ticker"]
+            allocation = round(cash*row[1]["weight"],2) - 0.01 if top["allocation_type"] != "equal" else round(cash/recs.index.size,2) - 0.01
+            buy_order_id = generate_client_order_id()
+            if row[1]["position_type"] == 1:
+                extractor.client.market_order_buy(client_order_id=buy_order_id,product_id=ticker,quote_size=str(allocation))
+            else:
+                extractor.client.market_order_sell(client_order_id=buy_order_id,product_id=ticker,base_size=str(allocation))
+        except Exception as e:
+            print(str(e))
+            continue

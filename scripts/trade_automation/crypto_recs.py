@@ -9,18 +9,12 @@ COMMON_PATH = os.path.join(project_root, 'common')
 from common.database.adatabase import ADatabase
 from common.processor.processor import Processor as p
 from common.extractor.coinbase_extractor import CoinbaseExtractor
-from financial_common.risk.rolling_factor_analysis import RollingFactorAnalysis
-from financial_common.risk.single_index_capm import SingleIndexCAPM
 from financial_common.indicator.indicator import Indicator
+from financial_common.metric.metric import Metric
 from financial_common.risk.risk_type import RiskType
-from financial_common.risk.benchmark import Benchmark
-from financial_common.portfolio_management.kpi import Metrics
-from financial_common.portfolio_management.portfolio_selection import PortfolioSelection
 from financial_common.portfolio_management.portfolio import Portfolio
-import numpy as np
 from datetime import datetime, timedelta
 import pandas as pd
-from time import sleep
 
 if datetime.now().weekday() == 0:
     market = ADatabase("market")
@@ -62,8 +56,10 @@ if datetime.now().weekday() == 0:
         
             price.sort_values("date", inplace=True)
             price = p.additional_date_columns(price)
+            for member in Metric:
+                price = member.calculate(price,live=True,timeframe=20)
             for member in Indicator:
-                price = member.calculate(price,live=True)
+                price = member.calculate(price,live=True,timeframe=20)
             for member in RiskType:
                 price = member.apply(price)
             prices.append(price)
@@ -71,10 +67,7 @@ if datetime.now().weekday() == 0:
             print(str(e))
             continue
 
-    simulation = pd.concat(prices).merge(index[["ticker","market_cap","industry"]],on="ticker",how="left")
-    simulation["office"] = "crypto"
-    simulation["sic_description"] = "crypto"
-    simulation["asset_class"] = "crypto"
+    simulation = pd.concat(prices)
     simulation.sort_values("date", inplace=True)
 
     top = results[results["timeframe"]=="WEEK"].sort_values("pnl",ascending=False).to_dict("records")[0]

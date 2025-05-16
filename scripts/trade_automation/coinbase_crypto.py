@@ -40,6 +40,7 @@ if datetime.now().weekday() == 0:
 
     ori.cloud_connect()
     recs = ori.retrieve("crypto_recommendations")
+    top = ori.retrieve("crypto_results").to_dict("records")[0]
     ori.disconnect()
 
     # # closing
@@ -62,6 +63,9 @@ if datetime.now().weekday() == 0:
 
     for row in recs.iterrows():
         ticker = row[1]["ticker"]
-        allocation = round(cash*row[1]["weight"],2)
+        allocation = round(cash*row[1]["weight"],2) if top["allocation_type"] != "equal" else round(cash/recs.index.size,2)
         buy_order_id = generate_client_order_id()
-        extractor.client.market_order_buy(client_order_id=buy_order_id,product_id=ticker,quote_size=str(allocation))
+        if row[1]["position_type"] == 1:
+            extractor.client.market_order_buy(client_order_id=buy_order_id,product_id=ticker,quote_size=str(allocation))
+        else:
+            extractor.client.market_order_sell(client_order_id=buy_order_id,product_id=ticker,quote_size=str(allocation))

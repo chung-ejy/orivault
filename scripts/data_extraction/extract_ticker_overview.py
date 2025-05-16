@@ -24,38 +24,9 @@ ticker_overviews = []
 
 alpaca_tickers = pd.DataFrame(alp.assets()).rename(columns={"symbol":"ticker"})
 relevant_tickers = alpaca_tickers[(alpaca_tickers["tradable"]==True) & (~alpaca_tickers["exchange"].isin(["OTC","CRYPTO"]))].copy()[["ticker","fractionable","exchange"]]
-# Download current stocks
-ticker_info = poly.ticker_info()
-ticker_infos = []
-ticker_infos.extend(ticker_info["results"])
-key = os.getenv("POLYGONKEY")
-for i in range(20):
-    try:
-        if "next_url" in ticker_info:
-            next_url = ticker_info["next_url"]
-        else:
-            break
-        ticker_info = r.get(next_url+f"&apiKey={key}").json()
-        ticker_infos.extend(ticker_info["results"])
-        sleep(20)
-    except Exception as e:
-        print(str(e))
-index = pd.DataFrame(ticker_infos).sort_values("ticker").merge(relevant_tickers, on="ticker", how="right").dropna()
-prices = []
+index = relevant_tickers.copy()
 
 market.connect()
 market.drop("index")
 market.store("index",index)
-market.disconnect()
-
-market.connect()
-market.drop("ticker_overview")
-tickers = list(index["ticker"].unique())
-for ticker in tqdm(tickers):
-    try:
-        ticker_data = poly.ticker_overview(ticker)["results"]
-        market.store("ticker_overview",pd.DataFrame([ticker_data]))
-        sleep(12)
-    except Exception as e:
-        print(str(e))
 market.disconnect()

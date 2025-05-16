@@ -3,6 +3,7 @@ from enum import Enum
 class GroupingType(Enum):
     STANDARD_DEV = "standard_dev"  
     AVERAGE_RETURN =  "average_return"
+    ROLLING_DOLLAR_VOLUME =  "rolling_dollar_volume"
 
     @classmethod
     def get_grouping_type(cls, position_label):

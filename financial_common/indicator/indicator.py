@@ -2,7 +2,6 @@ from enum import Enum
 import numpy as np
 
 class Indicator(Enum):
-    ROLLING_DOLLAR_VOLUME = ("rolling_dollar_volume", lambda: RollingDollarVolume())
     ADR = ("adr", lambda: ADRIndicator())
     SMA = ("sma", lambda: SMAIndicator())
     SMACorr = ("sma_corr", lambda: SMACorrIndicator())
@@ -60,13 +59,6 @@ class Indicator(Enum):
 
     def __str__(self):
         return self.label
-
-# Updated individual indicator classes
-class RollingDollarVolume:
-    @staticmethod
-    def calculate(price, timeframe, live):
-        cols = Indicator.get_columns(live)
-        return (price[cols["price"]] * price[cols["volume"]]).rolling(window=timeframe).mean()
 
 class ADRIndicator:
     @staticmethod

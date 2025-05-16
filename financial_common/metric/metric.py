@@ -4,7 +4,8 @@ import numpy as np
 class Metric(Enum):
     AVERAGE_RETURN = ("average_return", lambda: AverageReturn())
     STANDARD_DEV = ("standard_dev", lambda: StandardDev())
-
+    ROLLING_DOLLAR_VOLUME = ("rolling_dollar_volume", lambda: RollingDollarVolume())
+    
     def __init__(self, label, calculation_method):
         self.label = label
         self.calculation_method = calculation_method
@@ -58,3 +59,10 @@ class StandardDev:
     def calculate(price, timeframe, live):
         cols = Metric.get_columns(live)
         return price[cols["price"]].rolling(timeframe).std()
+
+# Updated individual indicator classes
+class RollingDollarVolume:
+    @staticmethod
+    def calculate(price, timeframe, live):
+        cols = Metric.get_columns(live)
+        return (price[cols["price"]] * price[cols["volume"]]).rolling(window=timeframe).mean()

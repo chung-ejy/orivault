@@ -34,7 +34,7 @@ def generate_client_order_id(prefix: str = "order") -> str:
     client_order_id = f"{prefix}_{timestamp}_{unique_id}"
     return client_order_id
 
-if datetime.now().weekday() == 4:
+if datetime.now().weekday() == 0:
     ori = ADatabase("ori")
     extractor = CoinbaseExtractor()
 

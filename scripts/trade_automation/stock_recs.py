@@ -38,12 +38,14 @@ if datetime.now().weekday() == 6: # Monday
     market.cloud_connect()
     index = market.retrieve("ticker_overview")
     market.disconnect()
-
+    delta_days = rolling_window/5*7*2
+    data_points_per_ticker = rolling_window * 2
+    tickers_per_batch = len(index["ticker"].unique())/data_points_per_ticker
     end = alp.clock()["date"] - timedelta(days=1)
-    start = (end - timedelta(days=100))
+    start = (end - timedelta(days=delta_days))
     prices = []
     tickers = list(index["ticker"].unique())
-    batchs = [tickers[i:i + 100] for i in range(0, len(tickers), 100)]
+    batchs = [tickers[i:i + tickers_per_batch] for i in range(0, len(tickers), tickers_per_batch)]
     for batch in batchs:
         tickers_data = alp.prices_bulk(batch,start,end)
         sleep(0.35)

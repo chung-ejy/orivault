@@ -66,7 +66,7 @@ if datetime.now().weekday() == 6: # Monday
     simulation = pd.concat(prices)
     simulation = simulation[simulation["adjclose"]<=max_price]
     simulation.sort_values("date", inplace=True)
-    trades = pm.recs(simulation.copy())
+    trades = pm.recs(simulation.copy()).sort_values("group_percentile", ascending=False)
 
     orivault.cloud_connect()
     orivault.drop("recommendations")

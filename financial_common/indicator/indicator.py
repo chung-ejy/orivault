@@ -2,6 +2,7 @@ from enum import Enum
 import numpy as np
 
 class Indicator(Enum):
+    OPTIMAL = ("optimal", lambda: OptimalIndicator())
     ADR = ("adr", lambda: ADRIndicator())
     SMA = ("sma", lambda: SMAIndicator())
     SMACorr = ("sma_corr", lambda: SMACorrIndicator())
@@ -60,6 +61,12 @@ class Indicator(Enum):
     def __str__(self):
         return self.label
 
+class OptimalIndicator:
+    @staticmethod
+    def calculate(price, timeframe, live):
+        cols = Indicator.get_columns(live)
+        return price[cols["price"]].pct_change(-5, fill_method=None)
+    
 class ADRIndicator:
     @staticmethod
     def calculate(price, timeframe, live):
@@ -70,15 +77,17 @@ class SMAIndicator:
     @staticmethod
     def calculate(price, timeframe, live):
         cols = Indicator.get_columns(live)
-        return price[cols["price"]].rolling(timeframe).mean() / price[cols["price"]]
+        return price[cols["price"]].rolling(timeframe).mean() / price[cols["price"]] - 1
 
 class SMACorrIndicator:
     @staticmethod
     def calculate(price, timeframe, live):
         cols = Indicator.get_columns(live)
-        rollings = price[cols["price"]].rolling(timeframe).mean() / price[cols["price"]]
+        rollings = price[cols["price"]].rolling(timeframe).mean() / price[cols["price"]] - 1
         rollings_corr = rollings.rolling(timeframe).corr(price[cols["price"]])
-        return rollings * rollings_corr
+        direction = rollings_corr / rollings_corr.abs()
+        tax = price[cols["price"]].pct_change().rolling(timeframe).mean().abs() - 1
+        return rollings * direction  * tax
     
 class EMAIndicator:
     @staticmethod

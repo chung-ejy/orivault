@@ -28,7 +28,7 @@ class Portfolio(object):
         trades = self.timeframe_trades(sim.copy())
         trades = self.allocations(trades)
         trades["unweighted_return"] = (trades["sell_price"] / trades["adjclose"] - 1) * trades["position_type"] + 1
-        trades["winsorized_return"] = winsorize(trades["unweighted_return"], [0.05, 0.05])
+        trades["winsorized_return"] = winsorize(trades["unweighted_return"], [0.001, 0.001])
         trades["return"] = (trades["winsorized_return"] - 1) * trades["weight"] + 1
         return trades
     

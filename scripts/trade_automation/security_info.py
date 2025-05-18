@@ -35,7 +35,6 @@ if datetime.now().weekday() == 6:
     market.disconnect()
 
     index = pd.read_html("https://coinmarketcap.com/")[0][["Name","Market Cap"]]
-    index["industry"] = "crypto"
     def extract_ticker(s):
         match = re.search(r'[A-Z]+$', s)
         if match:
@@ -50,5 +49,5 @@ if datetime.now().weekday() == 6:
 
     market.cloud_connect()
     market.drop("cryptocurrencies")
-    market.store("cryptocurrencies",index[["ticker","market_cap","industry"]])
+    market.store("cryptocurrencies",index[["ticker","market_cap"]])
     market.disconnect()

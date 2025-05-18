@@ -17,9 +17,9 @@ class Metric(Enum):
         cols = self.get_columns(live)
         if not live:
             price[cols["price"]] = price["adjclose"].shift(1)
-            price[cols["volume"]] = price["adjvolume"].shift(1)
-            price[cols["high"]] = price["adjhigh"].shift(1)
-            price[cols["low"]] = price["adjlow"].shift(1)
+            price[cols["volume"]] = price["volume"].shift(1)
+            price[cols["high"]] = price["high"].shift(1)
+            price[cols["low"]] = price["low"].shift(1)
         
         price[self.label] = self.calculation_method().calculate(price, timeframe, live)
         return price
@@ -60,8 +60,7 @@ class Drawdown:
     @staticmethod
     def calculate(price, timeframe, live):
         cols = Metric.get_columns(live)
-        price[cols["price"]] = price[cols["price"]].rolling(window=timeframe).max()
-        return (price[cols["price"]] - price[cols["price"]]) / price[cols["price"]]
+        return (price[cols["price"]].rolling(window=timeframe).max() - price[cols["price"]]) / price[cols["price"]]
             
 class AverageReturn:
     @staticmethod

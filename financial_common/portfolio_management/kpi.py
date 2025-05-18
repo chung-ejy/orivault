@@ -25,7 +25,9 @@ class KPI:
             raise KeyError(f"Portfolio DataFrame missing required columns: {required_portfolio_cols}")
 
         # Performance metrics
-        pnl = portfolio[portfolio["date"]==portfolio["date"].max()]["pnl"].iloc[0]  # Final portfolio profit/loss
+        pnl = portfolio[portfolio["date"]==portfolio["date"].max()]["pnl"].iloc[0] 
+         # Final portfolio profit/loss
+        raw_pnl = portfolio[portfolio["date"]==portfolio["date"].max()]["raw_pnl"].iloc[0]
         benchmark_pnl = portfolio[portfolio["date"]==portfolio["date"].max()]["benchmark_pnl"].iloc[0]
         rolling_max = portfolio["pnl"].rolling(rolling_window).max()  # Rolling maximum
         downside = portfolio["return"].min()  # Maximum downside deviation
@@ -51,6 +53,7 @@ class KPI:
         metrics = {
             "date": trades["date"].max(),  # Latest trade date
             "pnl": pnl,
+            "raw_pnl": raw_pnl,
             "downside": downside,
             "coefficient_of_variation": pnl/portfolio_std,
             "portfolio_std": portfolio_std,

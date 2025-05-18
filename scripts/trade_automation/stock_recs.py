@@ -15,50 +15,54 @@ from financial_common.metric.metric import Metric
 import pandas as pd
 from datetime import datetime, timedelta
 from time import sleep
+
 paper = False
 orivault = ADatabase("ori")
 market = ADatabase("market")
 alp = AlpacaExtractor(paper=paper)
 
-if datetime.now().weekday() == 0: # Monday
+if datetime.now().weekday() == 6: # Monday
     orivault.cloud_connect()
     a = orivault.retrieve("results")
     orivault.disconnect()
     top = a.head(1).to_dict(orient="records")[0]
+
     pm = Portfolio(timeframe=top["timeframe"].lower(), ranking_metric=top["ranking_metric"], 
                    position_type=top["position_type"], grouping_type=top["grouping_type"].lower(), 
                    selection_type=top["selection_type"], allocation_type=top["allocation_type"], 
                    risk_type=top["risk_type"], selection_percentage=top["selection_percentage"])
+    
     rolling_window = top["rolling_window"]
+    max_price = top["max_price"]
+    
     market.cloud_connect()
     index = market.retrieve("ticker_overview")
     market.disconnect()
 
     end = alp.clock()["date"] - timedelta(days=1)
-    start = (end - timedelta(days=200))
-
+    start = (end - timedelta(days=100))
     prices = []
-    for ticker in index["ticker"]: 
-        try:
-            price = alp.prices(ticker,start,end)
-            price = p.lower_column(price)
-            price = p.utc_date(price)
-            price.sort_values("date", inplace=True)
-            price = p.additional_date_columns(price)
-            for member in Metric:
-                price = member.calculate(price,timeframe=rolling_window,live=True)
-            for member in Indicator:
-                price = member.calculate(price,timeframe=rolling_window,live=True)
-            for member in RiskType:
-                price = member.apply(price)
-            prices.append(price)
-            sleep(0.35)
-        except Exception as e:
-            print(str(e))
-            continue
+    tickers = list(index["ticker"].unique())
+    batchs = [tickers[i:i + 100] for i in range(0, len(tickers), 100)]
+    for batch in batchs:
+        tickers_data = alp.prices_bulk(batch,start,end)
+        sleep(0.35)
+        for ticker in batch:
+            try:
+                price = tickers_data[tickers_data["ticker"] == ticker].copy()
+                price = p.lower_column(price)
+                price = p.utc_date(price)
+                price.sort_values("date", inplace=True)
+                price = p.additional_date_columns(price)
+                price = Metric.indicator_type_factory(top["grouping_type"].lower()).calculate(price,timeframe=rolling_window,live=True)
+                price = Indicator.indicator_type_factory(top["ranking_metric"].lower()).calculate(price,timeframe=rolling_window,live=True)
+                price = RiskType.risk_type_factory(top["risk_type"].lower()).apply(price)
+                prices.append(price)
+            except Exception as e:
+                print(str(e))
 
     simulation = pd.concat(prices)
-    simulation = simulation[simulation["adjclose"]<=10]
+    simulation = simulation[simulation["adjclose"]<=max_price]
     simulation.sort_values("date", inplace=True)
     trades = pm.recs(simulation.copy())
 

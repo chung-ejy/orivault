@@ -8,9 +8,9 @@ class RiskType(Enum):
         self.label = label
         self.risk_method = risk_method
 
-    def apply(self, df):
+    def apply(self, df,timeframe=20):
         """Invoke the associated risk method."""
-        return self.risk_method().apply(df)
+        return self.risk_method().apply(df,timeframe)
     
     @classmethod
     def risk_type_factory(cls, risk_type):
@@ -22,7 +22,7 @@ class RiskType(Enum):
 
 class CoefficientOfVariation:
     @staticmethod
-    def apply(df):
+    def apply(df,timeframe=20):
         df.sort_values("date",inplace=True)
-        df["coefficient_of_variation"] = df["adjclose"].rolling(100).std() / df["adjclose"].rolling(100).mean()
+        df["coefficient_of_variation"] = df["adjclose"].rolling(timeframe).std() / df["adjclose"].rolling(timeframe).mean()
         return df

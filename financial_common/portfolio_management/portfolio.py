@@ -28,7 +28,8 @@ class Portfolio(object):
         trades = self.timeframe_trades(sim.copy())
         trades = self.allocations(trades)
         trades["unweighted_return"] = (trades["sell_price"] / trades["adjclose"] - 1) * trades["position_type"] + 1
-        trades["winsorized_return"] = winsorize(trades["unweighted_return"], [0.00, 0.05])
+        trades["winsorized_return"] = winsorize(trades["unweighted_return"].copy(), [0.01, 0.01])
+        trades["weighted_return"] = (trades["unweighted_return"]-1) * trades["weight"] + 1
         trades["return"] = (trades["winsorized_return"] - 1) * trades["weight"] + 1
         return trades
     
@@ -95,11 +96,11 @@ class Portfolio(object):
     
     def portfolio(self, trades, benchmark):
         # Portfolio calculations
-        portfolio = trades.groupby("date", as_index=False).agg({"return": "mean"}).sort_values("date")
+        portfolio = trades.groupby("date", as_index=False).agg({"weighted_return":"mean","return": "mean"}).sort_values("date")
         portfolio = p.lower_column(portfolio)
         portfolio = p.utc_date(portfolio).sort_values("date")
         portfolio["pnl"] = portfolio["return"].cumprod()
-
+        portfolio["raw_pnl"] = portfolio["weighted_return"].cumprod()
         # Merge benchmark data once
         portfolio = portfolio.merge(benchmark[["date", "benchmark"]], on="date", how="left").dropna()
         portfolio["benchmark_pnl"] = portfolio["benchmark"] / portfolio["benchmark"].iloc[0]

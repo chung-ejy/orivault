@@ -69,8 +69,8 @@ if datetime.now().weekday() == 0:
 
     simulation = pd.concat(prices)
     simulation.sort_values("date", inplace=True)
-
-    top = results[results["timeframe"]=="WEEK"].sort_values("pnl",ascending=False).to_dict("records")[0]
+    simulation = simulation[simulation["adjclose"]<=10]
+    top = results.to_dict("records")[0]
     pm = Portfolio(timeframe=top["timeframe"].lower(), ranking_metric=top["ranking_metric"], position_type=top["position_type"], grouping_type=top["grouping_type"].lower(), selection_type=top["selection_type"], allocation_type=top["allocation_type"], risk_type=top["risk_type"], selection_percentage=top["selection_percentage"])
     recs = pm.recs(simulation)
 

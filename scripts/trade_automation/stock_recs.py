@@ -40,7 +40,7 @@ if datetime.now().weekday() == 6: # Monday
     market.disconnect()
     delta_days = rolling_window/5*7*2
     data_points_per_ticker = rolling_window * 2
-    tickers_per_batch = len(index["ticker"].unique())/data_points_per_ticker
+    tickers_per_batch = int(len(index["ticker"].unique())/data_points_per_ticker) - 1
     end = alp.clock()["date"] - timedelta(days=1)
     start = (end - timedelta(days=delta_days))
     prices = []

@@ -1,5 +1,5 @@
 from enum import Enum
-import numpy as np
+from scipy.stats.mstats import winsorize
 
 class Metric(Enum):
     AVERAGE_RETURN = ("average_return", lambda: AverageReturn())
@@ -7,6 +7,7 @@ class Metric(Enum):
     ROLLING_DOLLAR_VOLUME = ("rolling_dollar_volume", lambda: RollingDollarVolume())
     SIMPLE_MOVING_AVERAGE = ("simple_moving_average", lambda: SimpleMovingAverage())
     DRAWDOWN = ("drawdown", lambda: Drawdown())
+    DISTANCE = ("distance", lambda: Distance())
     def __init__(self, label, calculation_method):
         self.label = label
         self.calculation_method = calculation_method
@@ -74,7 +75,15 @@ class StandardDev:
         cols = Metric.get_columns(live)
         return price[cols["price"]].rolling(timeframe).std()
 
-# Updated individual indicator classes
+class Distance:
+    @staticmethod
+    def calculate(price, timeframe, live):
+        cols = Metric.get_columns(live)
+        x = winsorize(price[cols["price"]].rolling(window=timeframe).std(),[0.1,0.1])
+        y = winsorize(price[cols["price"]].pct_change(5).rolling(window=timeframe).mean(),[0.1,0.1])
+        z = (y / x) / [abs(val) for val in (y / x)]
+        return ((x**2 + y**2) ** (1/2)) * z
+
 class RollingDollarVolume:
     @staticmethod
     def calculate(price, timeframe, live):

@@ -58,6 +58,7 @@ if datetime.now().weekday() == 0: # Monday
             continue
 
     simulation = pd.concat(prices)
+    simulation = simulation[simulation["adjclose"]<=10]
     simulation.sort_values("date", inplace=True)
     trades = pm.recs(simulation.copy())
 

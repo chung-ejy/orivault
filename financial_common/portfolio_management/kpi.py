@@ -28,7 +28,7 @@ class KPI:
         pnl = portfolio[portfolio["date"]==portfolio["date"].max()]["pnl"].iloc[0]  # Final portfolio profit/loss
         benchmark_pnl = portfolio[portfolio["date"]==portfolio["date"].max()]["benchmark_pnl"].iloc[0]
         rolling_max = portfolio["pnl"].rolling(rolling_window).max()  # Rolling maximum
-        downside = (portfolio["pnl"] / rolling_max).min(skipna=True)  # Maximum downside deviation
+        downside = portfolio["return"].min()  # Maximum downside deviation
         rolling_std = portfolio["pnl"].rolling(rolling_window).std()  # Rolling volatility
         rolling_mean = portfolio["pnl"].rolling(rolling_window).mean()  # Rolling mean return
         coefficient_of_variation = (rolling_std / rolling_mean).mean(skipna=True)  # Coefficient of variation
@@ -51,11 +51,11 @@ class KPI:
         metrics = {
             "date": trades["date"].max(),  # Latest trade date
             "pnl": pnl,
-            # "downside": downside,
+            "downside": downside,
             "coefficient_of_variation": pnl/portfolio_std,
             "portfolio_std": portfolio_std,
             "average_gain": average_gain,
-            "average_loss": average_loss,
+            "average_loss": average_loss,   
             "win_loss_ratio": win_rate,
             "weekly_return": weekly_return,
             "sharpe_ratio": sharpe_ratio

@@ -49,10 +49,14 @@ if datetime.now().weekday() == 0:
     positions = portfolio["breakdown"].spot_positions
     crypto_positions = [x for x in positions if x.asset != "USD" ]
     for crypto_position in crypto_positions:
-        amount = float(crypto_position.available_to_trade_crypto)
-        ticker = crypto_position.asset + "-USD"
-        sell_order_id = generate_client_order_id()
-        extractor.client.market_order_sell(client_order_id=sell_order_id,product_id=ticker,base_size=str(amount))
+        try:
+            amount = float(crypto_position.available_to_trade_crypto)
+            ticker = crypto_position.asset + "-USD"
+            sell_order_id = generate_client_order_id()
+            extractor.client.market_order_sell(client_order_id=sell_order_id,product_id=ticker,base_size=str(amount))
+        except Exception as e:
+            print(str(e))
+            continue
 
     # ## purchasing
     portfolio = extractor.client.get_portfolio_breakdown(portfolio_uuid)

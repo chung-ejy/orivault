@@ -71,7 +71,7 @@ if datetime.now().weekday() == 0:
     simulation.sort_values("date", inplace=True)
     simulation = simulation[simulation["adjclose"]<=10]
     top = results.to_dict("records")[0]
-    pm = Portfolio(timeframe=top["timeframe"].lower(), ranking_metric=top["ranking_metric"], position_type=top["position_type"], grouping_type=top["grouping_type"].lower(), selection_type=top["selection_type"], allocation_type=top["allocation_type"], risk_type=top["risk_type"], selection_percentage=top["selection_percentage"])
+    pm = Portfolio.from_dict(top)
     recs = pm.recs(simulation)
 
     ori.cloud_connect()

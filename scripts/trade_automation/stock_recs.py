@@ -33,7 +33,6 @@ if datetime.now().weekday() == 6: # Monday
                    risk_type=top["risk_type"], selection_percentage=top["selection_percentage"])
     
     rolling_window = top["rolling_window"]
-    max_price = top["max_price"]
     
     market.cloud_connect()
     index = market.retrieve("ticker_overview")
@@ -63,7 +62,7 @@ if datetime.now().weekday() == 6: # Monday
                 print(str(e))
 
     simulation = pd.concat(prices)
-    simulation = simulation[simulation["adjclose"]<=max_price]
+    simulation = simulation[(simulation["adjclose"]<=top["max_price"]) & (simulation["adjclose"]>=top["min_price"])]
     simulation.sort_values("date", inplace=True)
     trades = pm.recs(simulation.copy()).sort_values("group_percentile", ascending=False)
 

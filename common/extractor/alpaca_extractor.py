@@ -143,8 +143,8 @@ class AlpacaExtractor(object):
             "time_in_force": "day",
             "order_class": "oto",
             "stop_loss": {
-                "stop_price": round(adjclose * float(1-hedge_percentage+0.01),2),
-                "limit_price": round(adjclose * float(1-hedge_percentage),2)
+                "stop_price": round(adjclose * float(1-hedge_percentage+0.001),3),
+                "limit_price": round(adjclose * float(1-hedge_percentage),3)
             }
         }
         url = f"{self.domain}/v2/orders"

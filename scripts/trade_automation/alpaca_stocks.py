@@ -20,7 +20,7 @@ recommendations = orivault.retrieve("recommendations")
 top = orivault.retrieve("results").to_dict("records")[0]
 orivault.disconnect()
 
-if end.weekday() == 6:
+if end.weekday() == 0:
     for row in recommendations.iterrows():
         ticker = str(row[1]["ticker"])
         direction = int(row[1]["position_type"])

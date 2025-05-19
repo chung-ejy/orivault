@@ -14,7 +14,7 @@ warnings.simplefilter(action='ignore')
 
 class Portfolio(object):
 
-    def __init__(self, timeframe, ranking_metric, position_type, grouping_type, selection_type,  allocation_type, risk_type, selection_percentage):
+    def __init__(self, timeframe, ranking_metric, position_type, grouping_type, selection_type,  allocation_type, risk_type, selection_percentage, stoploss=0.1):
         self.ranking_metric = ranking_metric  # Metric used to rank the securities
         self.timeframe = Timeframe.timeframe_factory(timeframe)  # Timeframe of the assets (e.g., week, month, quarter)
         self.position_type = PositionType.get_position_type(position_type)
@@ -23,13 +23,15 @@ class Portfolio(object):
         self.allocation_type = AllocationType.allocation_type_factory(allocation_type)
         self.risk_type = RiskType.risk_type_factory(risk_type)
         self.selection_percentage = selection_percentage  # Percentage of securities to select
+        self.stoploss = stoploss  # Stop loss percentage
 
     def trades(self, sim):
         trades = self.timeframe_trades(sim.copy())
         trades = self.allocations(trades)
         trades["unweighted_return"] = (trades["sell_price"] / trades["adjclose"] - 1) * trades["position_type"] + 1
-        trades["winsorized_return"] = winsorize(trades["unweighted_return"].copy(), [0.01, 0.01])
-        trades["weighted_return"] = (trades["unweighted_return"]-1) * trades["weight"] + 1
+        trades["stoploss_return"] = [max(1 - self.stoploss, x) for x in trades["unweighted_return"]]
+        trades["winsorized_return"] = winsorize(trades["stoploss_return"].copy(), [0.01, 0.01])
+        trades["weighted_return"] = (trades["stoploss_return"]-1) * trades["weight"] + 1
         trades["return"] = (trades["winsorized_return"] - 1) * trades["weight"] + 1
         return trades
     

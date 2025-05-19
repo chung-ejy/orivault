@@ -97,12 +97,13 @@ class AlpacaExtractor(object):
         requestBody = r.get(url,params=params,headers=self.headers)
         return requestBody.json()
     
-    def buy(self,ticker,quantity):
+    def buy(self,ticker,adjclose,quantity):
         data = {
             "side": "buy",
-            "type": "market",
+            "type": "limit",
             "time_in_force": "day",
             "symbol": ticker,
+            "limit_price": adjclose,
             "qty": quantity
             }
         url = f"{self.domain}/v2/orders"
@@ -121,13 +122,14 @@ class AlpacaExtractor(object):
         requestBody = r.post(url,json=data,headers=self.headers)
         return requestBody.json()
    
-    def sell(self,ticker,notional):
+    def sell(self,ticker,adjclose,quantity):
         data = {
             "side": "sell",
-            "type": "market",
+            "type": "limit",
             "time_in_force": "day",
             "symbol": ticker,
-            "notional": notional
+            "limit_price": adjclose,
+            "quantity": quantity
             }
         url = f"{self.domain}/v2/orders"
         requestBody = r.post(url,json=data,headers=self.headers)

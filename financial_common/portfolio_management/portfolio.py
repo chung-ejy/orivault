@@ -14,7 +14,7 @@ warnings.simplefilter(action='ignore')
 
 class Portfolio(object):
 
-    def __init__(self, timeframe, ranking_metric, position_type, grouping_type, selection_type,  allocation_type, risk_type, selection_percentage, stoploss=0.1):
+    def __init__(self, timeframe, ranking_metric, position_type, grouping_type, selection_type,  allocation_type, risk_type, selection_percentage, stoploss=1):
         self.ranking_metric = ranking_metric  # Metric used to rank the securities
         self.timeframe = Timeframe.timeframe_factory(timeframe)  # Timeframe of the assets (e.g., week, month, quarter)
         self.position_type = PositionType.get_position_type(position_type)

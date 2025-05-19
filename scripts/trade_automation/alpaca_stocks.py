@@ -33,9 +33,9 @@ if end.weekday() == 0:
             continue
         else:
             if direction == 1:
-                print(alp.buy_stop_loss(ticker,adjclose,qty,top["stoploss"]))
+                print(alp.buy(ticker,adjclose,qty))
             elif direction == -1:
-                print(alp.sell_stop_loss(ticker,adjclose,qty,top["stoploss"]))
+                print(alp.sell(ticker,adjclose,qty))
             else:
                 print("invalid direction")
 elif end.weekday() == 4:

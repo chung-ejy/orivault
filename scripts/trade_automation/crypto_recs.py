@@ -16,7 +16,7 @@ from financial_common.portfolio_management.portfolio import Portfolio
 from datetime import datetime, timedelta
 import pandas as pd
 
-if datetime.now().weekday() == 6:
+if datetime.now().weekday() == 0:
     market = ADatabase("market")
     ori = ADatabase("ori")
     coinbase = CoinbaseExtractor()

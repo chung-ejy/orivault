@@ -21,7 +21,7 @@ orivault = ADatabase("ori")
 market = ADatabase("market")
 alp = AlpacaExtractor(paper=paper)
 
-if datetime.now().weekday() == 0: # Monday
+if datetime.now().weekday() == 6: # Monday
     orivault.cloud_connect()
     a = orivault.retrieve("results")
     orivault.disconnect()

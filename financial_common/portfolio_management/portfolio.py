@@ -10,11 +10,12 @@ from scipy.stats.mstats import winsorize
 from common.processor.processor import Processor as p
 from enum import Enum
 import warnings
+import pandas as pd
 warnings.simplefilter(action='ignore')
 
 class Portfolio(object):
 
-    def __init__(self, timeframe, ranking_metric, position_type, grouping_type, selection_type,  allocation_type, risk_type, selection_percentage, stoploss=1):
+    def __init__(self, timeframe, ranking_metric, position_type, grouping_type, selection_type,  allocation_type, risk_type, selection_percentage, num_of_groups = 10 ,stoploss=1):
         self.ranking_metric = ranking_metric  # Metric used to rank the securities
         self.timeframe = Timeframe.timeframe_factory(timeframe)  # Timeframe of the assets (e.g., week, month, quarter)
         self.position_type = PositionType.get_position_type(position_type)
@@ -24,6 +25,7 @@ class Portfolio(object):
         self.risk_type = RiskType.risk_type_factory(risk_type)
         self.selection_percentage = selection_percentage  # Percentage of securities to select
         self.stoploss = stoploss  # Stop loss percentage
+        self.num_of_groups = num_of_groups  # Number of groups to divide the securities into
 
     def trades(self, sim):
         trades = self.timeframe_trades(sim.copy())
@@ -70,15 +72,15 @@ class Portfolio(object):
     
     def group_percentile_labeling(self,sim):
         index = ["year", self.timeframe.value]
-        sim = self.percentile_labeling(index, sim, self.grouping_type.value, "group", 1)
+        sim = self.percentile_labeling(index, sim, self.grouping_type.value, "group", self.num_of_groups)
         return sim
     
     def ranking_percentile_labeling(self,sim): 
         index = ["year", self.timeframe.value,"group_percentile"]
-        sim = self.percentile_labeling(index, sim, self.ranking_metric, "rank", 3)
+        sim = self.percentile_labeling(index, sim, self.ranking_metric, "rank", 1000)
         return sim
     
-    def percentile_labeling(self,index,sim,column,name,decimals=3):
+    def percentile_labeling(self,index,sim,column,name,num_of_groups=3):
         """
         This function computes the percentile ranking of a given metric within a specified grouping.
         It returns the DataFrame with an additional column for the percentile rank.
@@ -92,13 +94,15 @@ class Portfolio(object):
         # Ensure safe float division
         sim[f"{name}_idx_max"] = sim[f"{name}_idx_max"].astype(float)
         # Compute percentiles using safer rounding
-        sim[f"{name}_percentile"] = round(sim[f"{name}_idx"] / sim[f"{name}_idx_max"] * 10 ** decimals) / 10 ** decimals
+        sim[f"{name}_percentile"] = round(sim[f"{name}_idx"] / sim[f"{name}_idx_max"] * 1000).astype(int)
+        sim[f"{name}_percentile"] = pd.cut(sim[f"{name}_percentile"], bins=num_of_groups, labels=range(1, num_of_groups + 1), include_lowest=True)  
         sim.drop([f"{name}_idx", f"{name}_idx_max"], axis=1, inplace=True)
         return sim
     
     def portfolio(self, trades, benchmark):
         # Portfolio calculations
-        portfolio = trades.groupby("date", as_index=False).agg({"weighted_return":"mean","return": "mean"}).sort_values("date")
+        portfolio = trades.groupby(["year",self.timeframe.value], as_index=False).agg({"date":"last","weighted_return":"mean","return": "mean"}).reset_index()
+        # Convert year and timeframe into a proper date format  # Ensure it's correctly accessed
         portfolio = p.lower_column(portfolio)
         portfolio = p.utc_date(portfolio).sort_values("date")
         portfolio["pnl"] = portfolio["return"].cumprod()
@@ -123,7 +127,11 @@ class Portfolio(object):
         }
     @staticmethod
     def from_dict(data):
-        return Portfolio(timeframe=data["timeframe"].lower(), ranking_metric=data["ranking_metric"], position_type=data["position_type"], grouping_type=data["grouping_type"].lower(), selection_type=data["selection_type"], allocation_type=data["allocation_type"], risk_type=data["risk_type"], selection_percentage=data["selection_percentage"])
+        return Portfolio(timeframe=data["timeframe"].lower()
+                         , ranking_metric=data["ranking_metric"], position_type=data["position_type"]
+                         , grouping_type=data["grouping_type"].lower(), selection_type=data["selection_type"]
+                         , allocation_type=data["allocation_type"], risk_type=data["risk_type"], selection_percentage=data["selection_percentage"]
+                         , stoploss=data["stoploss"], num_of_groups=data["num_of_groups"])
 
 class OptimizedPortfolio(Portfolio):
     """

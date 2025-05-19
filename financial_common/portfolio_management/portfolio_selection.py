@@ -13,7 +13,7 @@ from itertools import product
 class PortfolioSelection:
     
     @staticmethod
-    def generate_possible_portfolios(group_percentages=[0.01], ranking_metrics=["factor"]):
+    def generate_possible_portfolios(num_of_groups=[10],group_percentages=[0.01], ranking_metrics=["factor"]):
         """
         Generate all possible portfolios based on the given parameters.
 
@@ -35,8 +35,8 @@ class PortfolioSelection:
 
         # Generate portfolios for all combinations of parameters
         portfolios = []
-        for ranking_metric, timeframe, group_percentage, grouping_type,selection_type, allocation_type, risk_type, position_type in product(
-            ranking_metrics, Timeframe, group_percentages, GroupingType, SelectionType, AllocationType, RiskType, PositionType):
+        for ranking_metric, timeframe, group_percentage, grouping_type,selection_type, allocation_type, risk_type, position_type, num_of_group in product(
+            ranking_metrics, Timeframe, group_percentages, GroupingType, SelectionType, AllocationType, RiskType, PositionType,num_of_groups):
             
             portfolio = Portfolio(
                 ranking_metric=ranking_metric,
@@ -46,7 +46,8 @@ class PortfolioSelection:
                 selection_type=selection_type.label,
                 allocation_type=allocation_type.label,
                 risk_type=risk_type.label,
-                selection_percentage=group_percentage
+                selection_percentage=group_percentage,
+                num_of_groups=num_of_group
             )
             portfolios.append(portfolio)
         

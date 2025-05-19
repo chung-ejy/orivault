@@ -21,16 +21,13 @@ orivault = ADatabase("ori")
 market = ADatabase("market")
 alp = AlpacaExtractor(paper=paper)
 
-if datetime.now().weekday() == 6: # Monday
+if datetime.now().weekday() == 0: # Monday
     orivault.cloud_connect()
     a = orivault.retrieve("results")
     orivault.disconnect()
     top = a.head(1).to_dict(orient="records")[0]
 
-    pm = Portfolio(timeframe=top["timeframe"].lower(), ranking_metric=top["ranking_metric"], 
-                   position_type=top["position_type"], grouping_type=top["grouping_type"].lower(), 
-                   selection_type=top["selection_type"], allocation_type=top["allocation_type"], 
-                   risk_type=top["risk_type"], selection_percentage=top["selection_percentage"])
+    pm = Portfolio.from_dict(top)
     
     rolling_window = top["rolling_window"]
     

@@ -129,7 +129,7 @@ class AlpacaExtractor(object):
             "time_in_force": "day",
             "symbol": ticker,
             "limit_price": adjclose,
-            "quantity": quantity
+            "qty": quantity
             }
         url = f"{self.domain}/v2/orders"
         requestBody = r.post(url,json=data,headers=self.headers)

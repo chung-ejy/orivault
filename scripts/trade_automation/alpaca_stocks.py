@@ -26,7 +26,7 @@ if end.weekday() == 6:
         direction = int(row[1]["position_type"])
         asset_info = alp.asset_info(ticker)
         ticker_data = alp.latest_bar(ticker)
-        adjclose = round(float(ticker_data["c"]),3)
+        adjclose = round(float(ticker_data["c"]),4)
         allocation = round(cash*row[1]["weight"],2) - 0.01 if top["allocation_type"] != "equal" else round(cash/recommendations.index.size,2) - 0.01
         qty = int(allocation/adjclose)
         if bool(asset_info["tradable"]) == False:

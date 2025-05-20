@@ -16,7 +16,7 @@ end = alp.clock()["date"]
 account = alp.account()
 cash = round(float(account["cash"]),2)
 orivault.cloud_connect()
-recommendations = orivault.retrieve("recommendations").sort_values("group_percentile",ascending=False).head(5)
+recommendations = orivault.retrieve("recommendations").sort_values("group_percentile",ascending=True)
 top = orivault.retrieve("results").to_dict("records")[0]
 orivault.disconnect()
 
@@ -26,21 +26,16 @@ if end.weekday() == 0:
         direction = int(row[1]["position_type"])
         asset_info = alp.asset_info(ticker)
         ticker_data = alp.latest_bar(ticker)
-        adjclose = round(float(ticker_data["c"]),4)
-        high = round(float(ticker_data["h"]),4)
-        low = round(float(ticker_data["l"]),4)
+        adjclose = round(float(ticker_data["c"]),2)
         allocation = round(cash*row[1]["weight"],2) - 0.01 if top["allocation_type"] != "equal" else round(cash/recommendations.index.size,2) - 0.01
-        print(ticker,adjclose,high,low,allocation)
         qty = int(allocation/adjclose)
         if bool(asset_info["tradable"]) == False:
             continue
         else:
             if direction == 1:
-                qty = int(allocation/low)
-                print(alp.buy(ticker,low,qty))
+                print(alp.buy_stop_loss(ticker,adjclose,qty,top["stoploss"]))
             elif direction == -1:
-                qty = int(allocation/high)
-                print(alp.sell(ticker,high,qty))
+                print(alp.sell_stop_loss(ticker,adjclose,qty,top["stoploss"]))
             else:
                 print("invalid direction")
 elif end.weekday() == 4:

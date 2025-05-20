@@ -145,8 +145,8 @@ class AlpacaExtractor(object):
             "time_in_force": "day",
             "order_class": "oto",
             "stop_loss": {
-                "stop_price": round(adjclose * float(1-hedge_percentage),4),
-                "limit_price": round(adjclose * float(1-hedge_percentage-0.01),4)
+                "stop_price": round(adjclose * float(1-hedge_percentage),2),
+                "limit_price": round(adjclose * float(1-hedge_percentage-0.01),2)
             }
         }
         url = f"{self.domain}/v2/orders"
@@ -163,8 +163,8 @@ class AlpacaExtractor(object):
             "time_in_force": "day",
             "order_class": "oto",  # One-Triggers-Other (OTO) order
             "stop_loss": {
-                "stop_price": round(adjclose * float(1+hedge_percentage), 4),  # Stop loss triggered if price rises 5% above adjusted close
-                "limit_price": round(adjclose * float(1+hedge_percentage+0.01), 4)  # The stop loss limit, slightly above the stop price
+                "stop_price": round(adjclose * float(1+hedge_percentage), 2),  # Stop loss triggered if price rises 5% above adjusted close
+                "limit_price": round(adjclose * float(1+hedge_percentage+0.01), 2)  # The stop loss limit, slightly above the stop price
             }
         }
         url = f"{self.domain}/v2/orders"

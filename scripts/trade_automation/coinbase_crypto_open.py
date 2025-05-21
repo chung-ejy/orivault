@@ -23,24 +23,23 @@ top = ori.retrieve("crypto_results").to_dict("records")[0]
 ori.disconnect()
 pm = Portfolio.from_dict(top)
 
-# # closing
-accounts = coin.client.get_accounts()
-cash = float([x.available_balance["value"] for x in accounts["accounts"] if x.currency == "USD"][0])
-print(cash)
-for row in recs.iterrows():
-    try:
-        ticker = row[1]["ticker"]
-        bid_ask = coin.client.get_best_bid_ask(ticker)["pricebooks"][0]
-        bid = float(bid_ask["bids"][0]["price"])
-        ask = float(bid_ask["asks"][0]["price"])  
-        allocation = int(cash*row[1]["weight"]) if top["allocation_type"] != "equal" else int(cash/recs.index.size)
-        buy_order_id = Utils.generate_client_order_id()
-        qty = int(allocation / ask)
-        print(coin.client.limit_order_fok_buy(
-                                            client_order_id=Utils.generate_client_order_id(),
-                                            product_id=str(ticker)
-                                            ,base_size=str(qty)
-                                            ,limit_price=str(ask)))
-    except Exception as e:
-        print(str(e))
-        continue
+if end.hour == 15:
+    accounts = coin.client.get_accounts()
+    cash = float([x.available_balance["value"] for x in accounts["accounts"] if x.currency == "USD"][0])
+    for row in recs.iterrows():
+        try:
+            ticker = row[1]["ticker"]
+            bid_ask = coin.client.get_best_bid_ask(ticker)["pricebooks"][0]
+            bid = float(bid_ask["bids"][0]["price"])
+            ask = float(bid_ask["asks"][0]["price"])  
+            allocation = int(cash*row[1]["weight"]) if top["allocation_type"] != "equal" else int(cash/recs.index.size)
+            buy_order_id = Utils.generate_client_order_id()
+            qty = int(allocation / ask)
+            print(coin.client.limit_order_fok_buy(
+                                                client_order_id=Utils.generate_client_order_id(),
+                                                product_id=str(ticker)
+                                                ,base_size=str(qty)
+                                                ,limit_price=str(ask)))
+        except Exception as e:
+            print(str(e))
+            continue

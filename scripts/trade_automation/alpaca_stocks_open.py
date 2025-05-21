@@ -9,9 +9,9 @@ from common.database.adatabase import ADatabase
 from common.extractor.alpaca_extractor import AlpacaExtractor  
 from financial_common.portfolio_management.portfolio import Portfolio
 import pandas as pd
-paper = False
+
 orivault = ADatabase("ori")
-alp = AlpacaExtractor(paper=paper)
+alp = AlpacaExtractor(paper=False)
 
 end = pd.to_datetime(alp.clock()["date"])
 
@@ -21,6 +21,7 @@ orivault.disconnect()
 pm = Portfolio.from_dict(top)
 
 if end.hour == 15: ## open positions
+    alp.close()
     account = alp.account()
     cash = round(float(account["cash"]),2)
     orivault.cloud_connect()

@@ -12,7 +12,6 @@ import pandas as pd
 
 orivault = ADatabase("ori")
 alp = AlpacaExtractor(paper=False)
-
 end = pd.to_datetime(alp.clock()["date"])
 
 orivault.cloud_connect()

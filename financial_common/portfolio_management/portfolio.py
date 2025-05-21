@@ -15,7 +15,9 @@ warnings.simplefilter(action='ignore')
 
 class Portfolio(object):
 
-    def __init__(self, timeframe, ranking_metric, position_type, grouping_type, selection_type,  allocation_type, risk_type, selection_percentage, num_of_groups = 10 ,stoploss=1):
+    def __init__(self, timeframe, ranking_metric, position_type, grouping_type, selection_type,  \
+                 allocation_type, risk_type, selection_percentage, num_of_groups , \
+                    stoploss,max_price,min_price,rolling_window):
         self.ranking_metric = ranking_metric  # Metric used to rank the securities
         self.timeframe = Timeframe.timeframe_factory(timeframe)  # Timeframe of the assets (e.g., week, month, quarter)
         self.position_type = PositionType.get_position_type(position_type)
@@ -26,6 +28,9 @@ class Portfolio(object):
         self.selection_percentage = selection_percentage  # Percentage of securities to select
         self.stoploss = stoploss  # Stop loss percentage
         self.num_of_groups = num_of_groups  # Number of groups to divide the securities into
+        self.max_price = max_price  # Maximum price for filtering securities
+        self.min_price = min_price  # Minimum price for filtering securities
+        self.rolling_window = rolling_window  # Rolling window for calculations
 
     def trades(self, sim):
         trades = self.timeframe_trades(sim.copy())
@@ -43,6 +48,8 @@ class Portfolio(object):
         return trades
 
     def allocations(self,sim):
+        sim = sim[sim["adjclose"] >= self.min_price]
+        sim = sim[sim["adjclose"] <= self.max_price]
         trades = self.group_percentile_labeling(sim)
         trades = self.ranking_percentile_labeling(trades)
         trades = self.postprocessing(trades)
@@ -51,14 +58,12 @@ class Portfolio(object):
         return trades
     
     def timeframe_trades(self,sim):
-        sim["sell_price"] = sim["adjclose"]
+        sim["sell_price"] = sim["adjclose"] if self.timeframe.value != "day" else sim["next_close"]
         sim["sell_date"] = sim["date"]
         query = {"date":"last","adjclose":"first","sell_price":"last"}
         query[self.grouping_type.value] = "first"
         query[self.ranking_metric] = "first"
         query[self.risk_type.label] = "first"
-        if self.allocation_type.label == "market_cap":
-            query[self.allocation_type.label] = "first"
         timeframe_sim = sim.groupby(["year",self.timeframe.value,"ticker"]).agg(query).reset_index().sort_values("date")
         if self.timeframe.value=="week":
             timeframe_sim = timeframe_sim[(timeframe_sim[self.timeframe.value] != 1) & (timeframe_sim[self.timeframe.value] < 52)].sort_values("date")    
@@ -131,7 +136,7 @@ class Portfolio(object):
                          , ranking_metric=data["ranking_metric"], position_type=data["position_type"]
                          , grouping_type=data["grouping_type"].lower(), selection_type=data["selection_type"]
                          , allocation_type=data["allocation_type"], risk_type=data["risk_type"], selection_percentage=data["selection_percentage"]
-                         , stoploss=data["stoploss"], num_of_groups=data["num_of_groups"])
+                         , stoploss=data["stoploss"], num_of_groups=data["num_of_groups"],max_price=data["max_price"],min_price=data["min_price"],rolling_window=data["rolling_window"])
 
 class OptimizedPortfolio(Portfolio):
     """

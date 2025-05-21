@@ -8,6 +8,8 @@ class Metric(Enum):
     SIMPLE_MOVING_AVERAGE = ("simple_moving_average", lambda: SimpleMovingAverage())
     DRAWDOWN = ("drawdown", lambda: Drawdown())
     DISTANCE = ("distance", lambda: Distance())
+    NEXT_CLOSE = ("next_close", lambda: NextClose())
+
     def __init__(self, label, calculation_method):
         self.label = label
         self.calculation_method = calculation_method
@@ -55,7 +57,13 @@ class SimpleMovingAverage:
     def calculate(price, timeframe, live):
         cols = Metric.get_columns(live)
         return price[cols["price"]].rolling(window=timeframe).mean()
-
+    
+class NextClose:
+    @staticmethod
+    def calculate(price, timeframe, live):
+        cols = Metric.get_columns(live)
+        return price["adjclose"].shift(-1)
+    
 class Drawdown:
     @staticmethod
     def calculate(price, timeframe, live):

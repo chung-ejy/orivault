@@ -4,6 +4,7 @@ class Timeframe(Enum):
     QUARTER = "quarter"
     MONTH ="month"
     WEEK = "week"
+    DAY = "day"
 
     @classmethod
     def timeframe_factory(cls, timeframe):

@@ -13,7 +13,7 @@ from itertools import product
 class PortfolioSelection:
     
     @staticmethod
-    def generate_possible_portfolios(num_of_groups=[10],group_percentages=[0.01], ranking_metrics=["factor"]):
+    def generate_possible_portfolios(ranking_metrics,group_percentages,num_of_groups,max_prices,min_prices,stoplosses,rolling_windows):
         """
         Generate all possible portfolios based on the given parameters.
 
@@ -26,17 +26,10 @@ class PortfolioSelection:
         Returns:
             list: List of possible portfolios.
         """
-        # Validate inputs
-        if not (0 <= min(group_percentages) <= 1 and 0 <= max(group_percentages) <= 1):
-            raise ValueError("Group percentages must be between 0 and 1.")
-
-        if not isinstance(ranking_metrics, list):
-            raise ValueError("grouping_columns and ranking_metrics must be lists.")
-
         # Generate portfolios for all combinations of parameters
         portfolios = []
-        for ranking_metric, timeframe, group_percentage, grouping_type,selection_type, allocation_type, risk_type, position_type, num_of_group in product(
-            ranking_metrics, Timeframe, group_percentages, GroupingType, SelectionType, AllocationType, RiskType, PositionType,num_of_groups):
+        for ranking_metric, timeframe, group_percentage, grouping_type, selection_type, allocation_type, risk_type, position_type, num_of_group, max_price, min_price, stoploss, rolling_window in product(
+            ranking_metrics, Timeframe, group_percentages, GroupingType, SelectionType, AllocationType, RiskType, PositionType, num_of_groups, max_prices, min_prices, stoplosses, rolling_windows):
             
             portfolio = Portfolio(
                 ranking_metric=ranking_metric,
@@ -47,7 +40,11 @@ class PortfolioSelection:
                 allocation_type=allocation_type.label,
                 risk_type=risk_type.label,
                 selection_percentage=group_percentage,
-                num_of_groups=num_of_group
+                num_of_groups=num_of_group,
+                stoploss=stoploss,
+                max_price=max_price,
+                min_price=min_price,
+                rolling_window=rolling_window
             )
             portfolios.append(portfolio)
         

@@ -121,7 +121,35 @@ class AlpacaExtractor(object):
         url = f"{self.domain}/v2/orders"
         requestBody = r.post(url,json=data,headers=self.headers)
         return requestBody.json()
-   
+    
+    def long_stop_loss(self,ticker,stop_price,quantity):
+        data = {
+            "side": "sell",
+            "type": "stop_limit",
+            "time_in_force": "day",
+            "symbol": ticker,
+            "limit_price": stop_price - 0.01,
+            "stop_price": stop_price,
+            "qty": quantity
+            }
+        url = f"{self.domain}/v2/orders"
+        requestBody = r.post(url,json=data,headers=self.headers)
+        return requestBody.json()
+    
+    def short_stop_loss(self,ticker,stop_price,quantity):
+        data = {
+            "side": "buy",
+            "type": "stop_limit",
+            "time_in_force": "day",
+            "symbol": ticker,
+            "limit_price": stop_price + 0.01,
+            "stop_price": stop_price,
+            "qty": quantity
+            }
+        url = f"{self.domain}/v2/orders"
+        requestBody = r.post(url,json=data,headers=self.headers)
+        return requestBody.json()
+    
     def sell(self,ticker,adjclose,quantity):
         data = {
             "side": "sell",
@@ -133,42 +161,6 @@ class AlpacaExtractor(object):
             }
         url = f"{self.domain}/v2/orders"
         requestBody = r.post(url,json=data,headers=self.headers)
-        return requestBody.json()
-    
-    def buy_stop_loss(self,ticker,adjclose,quantity,hedge_percentage):
-        data = {
-            "side": "buy",
-            "symbol": ticker,
-            "type": "limit",
-            "limit_price":adjclose,
-            "qty": quantity,
-            "time_in_force": "day",
-            "order_class": "oto",
-            "stop_loss": {
-                "stop_price": round(adjclose * float(1-hedge_percentage),2),
-                "limit_price": round(adjclose * float(1-hedge_percentage-0.01),2)
-            }
-        }
-        url = f"{self.domain}/v2/orders"
-        requestBody = r.post(url,json=data,headers=self.headers)
-        return requestBody.json()
-    
-    def sell_stop_loss(self, ticker, adjclose, quantity,hedge_percentage):
-        data = {
-            "side": "sell",  # Sell order for a short position
-            "symbol": ticker,
-            "type": "limit",
-            "limit_price":adjclose,
-            "qty": quantity,
-            "time_in_force": "day",
-            "order_class": "oto",  # One-Triggers-Other (OTO) order
-            "stop_loss": {
-                "stop_price": round(adjclose * float(1+hedge_percentage), 2),  # Stop loss triggered if price rises 5% above adjusted close
-                "limit_price": round(adjclose * float(1+hedge_percentage+0.01), 2)  # The stop loss limit, slightly above the stop price
-            }
-        }
-        url = f"{self.domain}/v2/orders"
-        requestBody = r.post(url, json=data, headers=self.headers)
         return requestBody.json()
     
     def orders(self):
@@ -183,6 +175,12 @@ class AlpacaExtractor(object):
         url = f"{self.domain}/v2/orders"
         requestBody = r.get(url,params=params,headers=self.headers)
         return requestBody.json()
+    
+    def positions(self):
+        params = {}
+        url = f"{self.domain}/v2/positions"
+        requestBody = r.get(url,params=params,headers=self.headers)
+        return pd.DataFrame(requestBody.json())
     
     def close(self):
         params = {}

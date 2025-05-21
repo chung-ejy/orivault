@@ -25,18 +25,16 @@ if end.hour == 15: ## open positions
     orivault.cloud_connect()
     recommendations = orivault.retrieve("recommendations")
     orivault.disconnect()
-    positions = alp.positions()
     for row in recommendations.iterrows():
         ticker = str(row[1]["ticker"])
-        if ticker not in positions["symbol"].values:
-            direction = int(row[1]["position_type"])
-            ticker_data = alp.latest_bar(ticker)
-            adjclose = round(float(ticker_data["c"]),2)
-            allocation = round(cash*row[1]["weight"],2) - 0.01 if top["allocation_type"] != "equal" else round(cash/recommendations.index.size,2) - 0.01
-            qty = int(allocation/adjclose)
-            if direction == 1:
-                print(alp.buy(ticker,adjclose,qty))
-            elif direction == -1:
-                print(alp.sell(ticker,adjclose,qty))
-            else:
-                print("invalid direction")
+        direction = int(row[1]["position_type"])
+        ticker_data = alp.latest_bar(ticker)
+        adjclose = round(float(ticker_data["c"]),2)
+        allocation = round(cash*row[1]["weight"],2) - 0.01 if top["allocation_type"] != "equal" else round(cash/recommendations.index.size,2) - 0.01
+        qty = int(allocation/adjclose)
+        if direction == 1:
+            print(alp.buy(ticker,adjclose,qty))
+        elif direction == -1:
+            print(alp.sell(ticker,adjclose,qty))
+        else:
+            print("invalid direction")

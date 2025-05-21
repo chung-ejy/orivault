@@ -1,12 +1,14 @@
 from enum import Enum
 import numpy as np
 import pandas as pd
+from copy import deepcopy
 
 class SelectionType(Enum):
     MIXED = ("mixed", lambda: MixedSelection())
     TOP = ("top", lambda: TopSelection())
     BOTTOM = ("bottom", lambda: BottomSelection())
     LONGSHORT = ("long_short", lambda: LongShortSelection())  # Placeholder for long/short selection
+    TOP_BLACKLIST = ("top_blacklist",lambda: TopBlackListSelection())
 
     def __init__(self, label, selection_method):
         self.label = label
@@ -49,6 +51,29 @@ class TopSelection:
     @staticmethod
     def select(trades, percentage, position_type):
         top = trades.groupby("major_key").first()
+        top["position_type"] = position_type.portfolio_effect
+        return top
+
+class TopBlackListSelection:
+    @staticmethod
+    def select(trades, percentage, position_type):
+        trades = trades.sort_values(["date", "rank_percentile"])  # Sort once for efficiency
+
+        filtered_trades = []
+        previous_blacklist = set()
+        current_blacklist = set()
+        for major_key, date_trades in trades.groupby("major_key"):  # Use groupby instead of unique loop
+
+            daily_trades = date_trades[~date_trades["ticker"].isin(previous_blacklist)].head(1)
+            filtered_trades.append(daily_trades)
+
+            current_blacklist.update(daily_trades["ticker"])  # Use set for better lookup performance
+            
+            if len(current_blacklist) == 3:
+                previous_blacklist = deepcopy(current_blacklist)
+                current_blacklist = set()
+
+        top = pd.concat(filtered_trades)
         top["position_type"] = position_type.portfolio_effect
         return top
 

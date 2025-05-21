@@ -33,7 +33,7 @@ market.cloud_connect()
 index = market.retrieve("ticker_overview")
 market.disconnect()
 
-if end.hour == 8:
+if end.hour == 14:
     rolling_window = top["rolling_window"]
     delta_days = rolling_window/5*7*2
     tickers_per_batch = int(len(index["ticker"].unique())/rolling_window/5)

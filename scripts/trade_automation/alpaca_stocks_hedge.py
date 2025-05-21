@@ -26,13 +26,12 @@ if end.hour == 8: ## handle stoplosses
     for row in positions.iterrows():
         position = row[1]
         ticker = str(position["symbol"])
-        if ticker not in recs["ticker"].values:
-            price = float(position["avg_entry_price"])
-            side = str(position["side"])
-            qty = int(position["qty_available"])
-            if side == "long":
-                stop_price = round(price * (1-pm.stoploss),2)
-                print(alp.long_stop_loss(ticker,stop_price,qty))
-            else:
-                stop_price = round(price * (1+pm.stoploss),2)
-                print(alp.short_stop_loss(ticker,stop_price,qty))
+        price = float(position["avg_entry_price"])
+        side = str(position["side"])
+        qty = int(position["qty_available"])
+        if side == "long":
+            stop_price = round(price * (1-pm.stoploss),2)
+            print(alp.long_stop_loss(ticker,stop_price,qty))
+        else:
+            stop_price = round(price * (1+pm.stoploss),2)
+            print(alp.short_stop_loss(ticker,stop_price,qty))

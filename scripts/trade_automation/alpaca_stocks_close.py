@@ -27,12 +27,11 @@ if end.hour == 15: ## close positions
     for row in positions.iterrows():
         position = row[1]
         ticker = str(position["symbol"])
-        if ticker not in recs["ticker"].values:
-            ticker_data = alp.latest_bar(ticker)
-            adjclose = round(float(ticker_data["c"]),2)
-            side = str(position["side"])
-            qty = int(position["qty_available"])
-            if side == "long":
-                print(alp.sell(ticker,adjclose,qty))
-            else:
-                print(alp.buy(ticker,adjclose,qty))
+        ticker_data = alp.latest_bar(ticker)
+        adjclose = round(float(ticker_data["c"]),2)
+        side = str(position["side"])
+        qty = int(position["qty_available"])
+        if side == "long":
+            print(alp.sell(ticker,adjclose,qty))
+        else:
+            print(alp.buy(ticker,adjclose,qty))

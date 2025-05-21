@@ -43,8 +43,10 @@ class Portfolio(object):
         return trades
     
     def recs(self,sim):
-        todays_sim = sim[sim["date"] == sim["date"].max()]
-        trades = self.allocations(todays_sim)
+        filtered_sim = sim.sort_values("date").groupby(["year",self.timeframe.value,"ticker"]).first().reset_index()
+        trades = self.allocations(filtered_sim)
+        print(trades.tail(6))
+        trades = trades[trades["date"]==trades["date"].max()]
         return trades
 
     def allocations(self,sim):

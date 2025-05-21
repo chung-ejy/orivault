@@ -37,7 +37,7 @@ end = pd.to_datetime(alp.clock()["date"])
 start = end - timedelta(days=200)
 
 
-if end == 9:
+if end == 8:
     prices = []
     for ticker in index["ticker"]: 
         try:

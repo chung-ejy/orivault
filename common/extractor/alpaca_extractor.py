@@ -176,6 +176,12 @@ class AlpacaExtractor(object):
         requestBody = r.get(url,params=params,headers=self.headers)
         return requestBody.json()
     
+    def cancel_orders(self):
+        params = {}
+        url = f"{self.domain}/v2/orders"
+        requestBody = r.delete(url,params=params,headers=self.headers)
+        return requestBody.json()
+    
     def positions(self):
         params = {}
         url = f"{self.domain}/v2/positions"

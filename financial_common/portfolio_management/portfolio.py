@@ -45,7 +45,6 @@ class Portfolio(object):
     def recs(self,sim):
         filtered_sim = sim.sort_values("date").groupby(["year",self.timeframe.value,"ticker"]).first().reset_index()
         trades = self.allocations(filtered_sim)
-        print(trades.tail(6))
         trades = trades[trades["date"]==trades["date"].max()]
         return trades
 

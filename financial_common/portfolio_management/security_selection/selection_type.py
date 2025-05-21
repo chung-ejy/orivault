@@ -9,6 +9,7 @@ class SelectionType(Enum):
     BOTTOM = ("bottom", lambda: BottomSelection())
     LONGSHORT = ("long_short", lambda: LongShortSelection())  # Placeholder for long/short selection
     TOP_BLACKLIST = ("top_blacklist",lambda: TopBlackListSelection())
+    BOTTOM_BLACKLIST = ("bottom_blacklist",lambda: BottomBlackListSelection())
 
     def __init__(self, label, selection_method):
         self.label = label
@@ -60,22 +61,44 @@ class TopBlackListSelection:
         trades = trades.sort_values(["date", "rank_percentile"])  # Sort once for efficiency
 
         filtered_trades = []
-        previous_blacklist = set()
-        current_blacklist = set()
-        for major_key, date_trades in trades.groupby("major_key"):  # Use groupby instead of unique loop
+        previous_blacklist, current_blacklist = set(), set()
 
-            daily_trades = date_trades[~date_trades["ticker"].isin(previous_blacklist)].head(1)
-            filtered_trades.append(daily_trades)
+        for major_key, date_trades in trades.groupby("major_key"):  
+            daily_trade = date_trades.loc[~date_trades["ticker"].isin(previous_blacklist)].head(1)
+            filtered_trades.append(daily_trade)
 
-            current_blacklist.update(daily_trades["ticker"])  # Use set for better lookup performance
-            
-            if len(current_blacklist) == 3:
-                previous_blacklist = deepcopy(current_blacklist)
-                current_blacklist = set()
+            current_blacklist.update(daily_trade["ticker"])  
 
-        top = pd.concat(filtered_trades)
+            if len(current_blacklist) >= 3:  # More robust check
+                previous_blacklist, current_blacklist = current_blacklist.copy(), set()  
+
+        top = pd.concat(filtered_trades, ignore_index=True)  # `ignore_index=True` for efficiency
         top["position_type"] = position_type.portfolio_effect
+        
         return top
+
+class BottomBlackListSelection:
+    @staticmethod
+    def select(trades, percentage, position_type):
+        trades = trades.sort_values(["date", "rank_percentile"])  # Sort once for efficiency
+
+        filtered_trades = []
+        previous_blacklist, current_blacklist = set(), set()
+
+        for major_key, date_trades in trades.groupby("major_key"):  
+            daily_trade = date_trades.loc[~date_trades["ticker"].isin(previous_blacklist)].tail(1)
+            filtered_trades.append(daily_trade)
+
+            current_blacklist.update(daily_trade["ticker"])  
+
+            if len(current_blacklist) >= 3:  # More robust check
+                previous_blacklist, current_blacklist = current_blacklist.copy(), set()  
+
+        top = pd.concat(filtered_trades, ignore_index=True)  # `ignore_index=True` for efficiency
+        top["position_type"] = position_type.portfolio_effect
+        
+        return top
+
 
 class BottomSelection:
     @staticmethod

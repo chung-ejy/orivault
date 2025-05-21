@@ -18,7 +18,7 @@ import os
 load_dotenv()
 
 ## Initialize classes and constants
-years = 7
+years = 5
 market = ADatabase("market")
 alp = AlpacaExtractor()
 
@@ -28,21 +28,19 @@ start = (end - timedelta(days=365.25*years))
 
 market.connect()
 index = market.retrieve("index")
-market.drop("prices")
+market.drop("dividends")
 
 tickers = list(index["ticker"].unique())
-batchs = [tickers[i:i + 3] for i in range(0, len(tickers), 3)]
+batchs = [tickers[i:i + 4] for i in range(0, len(tickers), 4)]
 for batch in tqdm(batchs):
-    tickers_data = alp.prices_bulk(batch,start,end)
-    sleep(0.35)
-    for ticker in batch:
-        try:
-            ticker_data = tickers_data[tickers_data["ticker"] == ticker].copy()
-            ticker_data["ticker"] = ticker
-            ticker_data = p.lower_column(ticker_data)
-            ticker_data = p.utc_date(ticker_data)
-            market.store("prices",ticker_data)
-        except Exception as e:
-            print(str(e))
-market.create_index("prices","ticker")
+    try:
+        tickers_data = alp.dividends(batch,start,end).rename(columns={"symbol":"ticker","record_date":"date"})[["date","rate","ticker"]]
+        tickers_data = p.lower_column(tickers_data)
+        tickers_data = p.utc_date(tickers_data)
+        market.store("dividends",tickers_data)
+        sleep(0.35)
+    except Exception as e:
+        print(str(e))
+market.create_index("dividends","ticker")
 market.disconnect()
+

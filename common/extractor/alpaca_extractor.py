@@ -194,3 +194,18 @@ class AlpacaExtractor(object):
         requestBody = r.delete(url,params=params,headers=self.headers)
         return requestBody.json()
     
+    def dividends(self,tickers,start,end):
+        tickers_string = ",".join(tickers)
+        params = {
+            "symbols":tickers_string,
+            "types":"cash_dividend",
+            "start":start.strftime("%Y-%m-%d"),
+            "end":end.strftime("%Y-%m-%d"),
+            "limit":1000,
+
+        }
+        url = "https://data.alpaca.markets/v1/corporate-actions"
+        requestBody = r.get(url,params=params,headers=self.headers)
+        json_request = requestBody.json()["corporate_actions"]
+        data =  pd.DataFrame(json_request["cash_dividends"])
+        return data

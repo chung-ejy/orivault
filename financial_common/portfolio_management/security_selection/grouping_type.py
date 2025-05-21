@@ -7,6 +7,8 @@ class GroupingType(Enum):
     SIMPLE_MOVING_AVERAGE =  "simple_moving_average"
     DRAWDOWN =  "drawdown"
     DISTANCE = "distance"
+    DIVIDEND = "dividend"
+    
     @classmethod
     def get_grouping_type(cls, position_label):
         """

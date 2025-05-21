@@ -9,6 +9,7 @@ class Metric(Enum):
     DRAWDOWN = ("drawdown", lambda: Drawdown())
     DISTANCE = ("distance", lambda: Distance())
     NEXT_CLOSE = ("next_close", lambda: NextClose())
+    DIVIDEND = ("dividend",lambda: Dividend())
 
     def __init__(self, label, calculation_method):
         self.label = label
@@ -96,3 +97,8 @@ class RollingDollarVolume:
     def calculate(price, timeframe, live):
         cols = Metric.get_columns(live)
         return (price[cols["price"]] * price[cols["volume"]]).rolling(window=timeframe).mean()
+
+class Dividend:
+    @staticmethod
+    def calculate(price, timeframe, live):
+        return (price["dividend"]).ffill().fillna(0).rolling(window=timeframe).mean()

@@ -32,7 +32,7 @@ if end.hour == 15:
             bid_ask = coin.client.get_best_bid_ask(ticker)["pricebooks"][0]
             bid = float(bid_ask["bids"][0]["price"])
             ask = float(bid_ask["asks"][0]["price"])  
-            allocation = int(cash*row[1]["weight"]) if top["allocation_type"] != "equal" else int(cash/recs.index.size)
+            allocation = int(cash*row[1]["weight"])
             buy_order_id = Utils.generate_client_order_id()
             qty = int(allocation / ask)
             print(coin.client.limit_order_fok_buy(

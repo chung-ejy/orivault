@@ -30,7 +30,7 @@ if end.hour == 15: ## open positions
         direction = int(row[1]["position_type"])
         ticker_data = alp.latest_bar(ticker)
         adjclose = round(float(ticker_data["c"]),2)
-        allocation = round(cash*row[1]["weight"],2) - 0.01 if top["allocation_type"] != "equal" else round(cash/recommendations.index.size,2) - 0.01
+        allocation = round(cash*row[1]["weight"],2) - 0.01
         qty = int(allocation/adjclose)
         if direction == 1:
             print(alp.buy(ticker,adjclose,qty))

@@ -58,6 +58,7 @@ if end.hour == 9:
             price = p.utc_date(price)
         
             price.sort_values("date", inplace=True)
+            price["dividend"] = 0
             price = p.additional_date_columns(price)
             price = Metric.indicator_type_factory(top["grouping_type"].lower()).calculate(price,timeframe=pm.rolling_window,live=True)
             price = Indicator.indicator_type_factory(top["ranking_metric"].lower()).calculate(price,timeframe=pm.rolling_window,live=True)

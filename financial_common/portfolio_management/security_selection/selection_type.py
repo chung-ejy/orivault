@@ -32,7 +32,7 @@ class MixedSelection:
     @staticmethod
     def select(trades, percentage, position_type):
         # Compute indices within each group
-        filtered = pd.concat([trades.groupby("major_key").first(),trades.groupby("major_key").last()])
+        filtered = pd.concat([trades.groupby("major_key").first().reset_index(),trades.groupby("major_key").last().reset_index()])
         # Assign position type within grouping phase, avoiding post-processing
         filtered["position_type"] = position_type.portfolio_effect
         return filtered
@@ -41,9 +41,9 @@ class LongShortSelection:
     @staticmethod
     def select(trades, percentage, position_type):
         # Compute indices within each group
-        top = trades.groupby("major_key").first()
+        top = trades.groupby("major_key").first().reset_index()
         top["position_type"] = position_type.portfolio_effect
-        bottom = trades.groupby("major_key").last()
+        bottom = trades.groupby("major_key").last().reset_index()
         bottom["position_type"] = -position_type.portfolio_effect
         filtered = pd.concat([top,bottom])
         return filtered
@@ -51,7 +51,7 @@ class LongShortSelection:
 class TopSelection:
     @staticmethod
     def select(trades, percentage, position_type):
-        top = trades.groupby("major_key").first()
+        top = trades.groupby("major_key").first().reset_index()
         top["position_type"] = position_type.portfolio_effect
         return top
 
@@ -103,6 +103,6 @@ class BottomBlackListSelection:
 class BottomSelection:
     @staticmethod
     def select(trades, percentage, position_type):
-        bottom = trades.groupby("major_key").last()
+        bottom = trades.groupby("major_key").last().reset_index()
         bottom["position_type"] = position_type.portfolio_effect
         return bottom

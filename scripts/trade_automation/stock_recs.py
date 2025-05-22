@@ -44,12 +44,20 @@ if end.hour == 9:
     batchs = [tickers[i:i + tickers_per_batch] for i in range(0, len(tickers), tickers_per_batch)]
     for batch in batchs:
         tickers_data = alp.prices_bulk(batch,start,end)
+        dividends = alp.dividends(batch,start,end).rename(columns={"symbol":"ticker","record_date":"date"})[["date","rate","ticker"]]
         sleep(0.35)
         for ticker in batch:
             try:
                 price = tickers_data[tickers_data["ticker"] == ticker].copy()
+                dividends = dividends[dividends["ticker"]==ticker].copy()
                 price = p.lower_column(price)
                 price = p.utc_date(price)
+                if dividends.index.size > 0:
+                    dividends = p.utc_date(dividends)
+                    price = price.merge(dividends,on=["date","ticker"])
+                    price["dividend"] = price["rate"].ffill().fillna(0)
+                else:
+                    price["dividend"] = 0
                 price.sort_values("date", inplace=True)
                 price = p.additional_date_columns(price)
                 price = Metric.indicator_type_factory(top["grouping_type"].lower()).calculate(price,timeframe=rolling_window,live=True)

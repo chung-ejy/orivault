@@ -1,5 +1,6 @@
 from enum import Enum
 from scipy.stats.mstats import winsorize
+import numpy as np
 
 class Metric(Enum):
     AVERAGE_RETURN = ("average_return", lambda: AverageReturn())
@@ -10,6 +11,7 @@ class Metric(Enum):
     DISTANCE = ("distance", lambda: Distance())
     NEXT_CLOSE = ("next_close", lambda: NextClose())
     DIVIDEND = ("dividend",lambda: Dividend())
+    PriceToReturn = ("price_to_return",lambda: PriceToReturn())
 
     def __init__(self, label, calculation_method):
         self.label = label
@@ -83,14 +85,34 @@ class StandardDev:
         cols = Metric.get_columns(live)
         return price[cols["price"]].rolling(timeframe).std()
 
+import numpy as np
+
 class Distance:
     @staticmethod
     def calculate(price, timeframe, live):
         cols = Metric.get_columns(live)
-        x = winsorize(price[cols["price"]].rolling(window=timeframe).std(),[0.1,0.1])
-        y = winsorize(price[cols["price"]].pct_change(5).rolling(window=timeframe).mean(),[0.1,0.1])
-        z = (y / x) / [abs(val) for val in (y / x)]
-        return ((x**2 + y**2) ** (1/2)) * z
+
+        # Compute raw values with winsorization
+        w = winsorize(price["dividend"].rolling(window=timeframe).mean().bfill().values, [0.01, 0.01])
+        x = winsorize(price[cols["price"]].rolling(window=timeframe).mean().bfill().values, [0.01, 0.01])
+        y = winsorize(price[cols["price"]].pct_change(5).rolling(window=timeframe).std().bfill(), [0.01, 0.01])
+        z = winsorize(price[cols["price"]].pct_change(5).rolling(window=timeframe).mean().bfill(), [0.01, 0.01])
+
+        # Manual normalization function (scales to [-1,1])
+        def scale_to_range(arr):
+            return 2 * (arr - np.nanmin(arr)) / (np.nanmax(arr) - np.nanmin(arr) + 1e-6) - 1
+
+        # Scale each variable
+        w_scaled = scale_to_range(w)
+        x_scaled = scale_to_range(x)
+        y_scaled = scale_to_range(y)
+        z_scaled = scale_to_range(z)
+
+        # Compute normalized factor
+        norm_factor = (x_scaled**2 + y_scaled**2 + w_scaled**2 + z_scaled**2) ** (1/2)
+
+        return norm_factor
+    
 
 class RollingDollarVolume:
     @staticmethod
@@ -102,3 +124,9 @@ class Dividend:
     @staticmethod
     def calculate(price, timeframe, live):
         return (price["dividend"]).ffill().fillna(0).rolling(window=timeframe).mean()
+
+class PriceToReturn:
+    @staticmethod
+    def calculate(price,timeframe,live):
+        cols = Metric.get_columns(live)
+        return price[cols["price"]].rolling(window=timeframe).mean() / price[cols["price"]].pct_change(5).rolling(window=timeframe).mean() * 100

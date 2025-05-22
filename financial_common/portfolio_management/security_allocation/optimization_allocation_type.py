@@ -31,6 +31,7 @@ class EqualAllocation:
 class RiskAllocation:
     @staticmethod
     def allocate(trades):
-        trades["group_risk"] = trades.groupby("date")["risk"].transform("sum")
+        trades["date_key"] = ["".join(x.split("_")) for x in trades["major_key"]]
+        trades["group_risk"] = trades.groupby("date_key")["risk"].transform("sum")
         trades["weight"] = trades["risk"] / trades["group_risk"] 
         return trades

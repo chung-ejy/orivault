@@ -100,16 +100,17 @@ class EMACorrIndicator:
     def calculate(price, timeframe, live):
         cols = Indicator.get_columns(live)
         rollings = (price[cols["price"]].ewm(span=timeframe, adjust=False).mean() / price[cols["price"]] - 1).shift(5)
-        rollings_corr = rollings.rolling(timeframe).corr(price[cols["price"]])
+        rollings_corr = rollings.rolling(timeframe).corr(price[cols["price"]]) / rollings.rolling(timeframe).corr(price[cols["price"]]).abs()
+        spread = 1 - (price[cols["high"]] - price[cols["low"]]).rolling(timeframe).mean() / price[cols["price"]].rolling(timeframe).mean()
         rollings_corr.replace([np.inf, -np.inf], np.nan, inplace=True)
-        return rollings * rollings_corr
+        return rollings * rollings_corr * spread
     
 class EMAVolumeCorrIndicator:
     @staticmethod
     def calculate(price, timeframe, live):
         cols = Indicator.get_columns(live)
-        rollings = price[cols["price"]].ewm(span=timeframe, adjust=False).mean() / price[cols["price"]] - 1
-        rollings_corr = rollings.rolling(timeframe).corr(price[cols["price"]]).shift(5)
+        rollings = (price[cols["price"]].ewm(span=timeframe, adjust=False).mean() / price[cols["price"]] - 1).shift(5)
+        rollings_corr = rollings.rolling(timeframe).corr(price[cols["price"]])
         rollings_corr.replace([np.inf, -np.inf], np.nan, inplace=True)
         trade_volume = price[cols["volume"]].rolling(timeframe).mean() * price[cols["price"]].rolling(timeframe).mean()
         return rollings * trade_volume * rollings_corr

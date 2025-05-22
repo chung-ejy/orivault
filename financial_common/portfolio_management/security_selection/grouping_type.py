@@ -8,7 +8,8 @@ class GroupingType(Enum):
     DRAWDOWN =  "drawdown"
     DISTANCE = "distance"
     DIVIDEND = "dividend"
-    
+    # GICS = "GICS Sector"
+    # GICS_SUB = "GICS Sub-Industry"
     @classmethod
     def get_grouping_type(cls, position_label):
         """

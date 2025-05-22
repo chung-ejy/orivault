@@ -29,26 +29,13 @@ class KPI:
          # Final portfolio profit/loss
         raw_pnl = portfolio[portfolio["date"]==portfolio["date"].max()]["raw_pnl"].iloc[0]
         benchmark_pnl = portfolio[portfolio["date"]==portfolio["date"].max()]["benchmark_pnl"].iloc[0]
-        rolling_max = portfolio["pnl"].rolling(rolling_window).max()  # Rolling maximum
         downside = portfolio["return"].min()  # Maximum downside deviation
-        rolling_std = portfolio["pnl"].rolling(rolling_window).std()  # Rolling volatility
-        rolling_mean = portfolio["pnl"].rolling(rolling_window).mean()  # Rolling mean return
-        coefficient_of_variation = (rolling_std / rolling_mean).mean(skipna=True)  # Coefficient of variation
         portfolio_std = portfolio["pnl"].std()  # Overall portfolio volatility
         portfolio_std = 1e-6 if portfolio_std == 0 else portfolio_std  # Prevent division by zero
-
-        # Trade-level metrics
-        wins = trades["return"] >= 1  # Successful trades
-        average_gain = trades.loc[wins, "return"].mean()  # Average gain from winning trades
-        average_loss = trades.loc[~wins, "return"].mean()  # Average loss from losing trades
-        win_rate = wins.sum() / len(trades)  # Win rate (successful trades / total trades)
-
-        # Weekly return
-        weekly_return = win_rate * average_gain + (1 - win_rate) * average_loss
-
         # Outperformance ratio
         sharpe_ratio = (pnl -benchmark_pnl ) / portfolio_std
-
+        tracking_error = (portfolio["pnl"]-portfolio["benchmark_pnl"]).std()
+        information_ratio = (pnl -benchmark_pnl ) / tracking_error
         # Compile metrics into a dictionary
         metrics = {
             "date": trades["date"].max(),  # Latest trade date
@@ -56,12 +43,10 @@ class KPI:
             "raw_pnl": raw_pnl,
             "downside": downside,
             "coefficient_of_variation": pnl/portfolio_std,
-            "portfolio_std": portfolio_std,
-            "average_gain": average_gain,
-            "average_loss": average_loss,   
-            "win_loss_ratio": win_rate,
-            "weekly_return": weekly_return,
-            "sharpe_ratio": sharpe_ratio
+            "portfolio_std": portfolio_std,  
+            "sharpe_ratio": sharpe_ratio,
+            "tracking_error":tracking_error,
+            "information_ratio":information_ratio
         }
 
         return metrics

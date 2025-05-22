@@ -38,8 +38,8 @@ class Portfolio(object):
         trades["unweighted_return"] = (trades["sell_price"] / trades["adjclose"] - 1) * trades["position_type"] + 1
         trades["stoploss_return"] = [max(1 - self.stoploss, x) for x in trades["unweighted_return"]]
         trades["winsorized_return"] = winsorize(trades["stoploss_return"].copy(), [0.01, 0.01])
-        trades["weighted_return"] = (trades["stoploss_return"]-1) * trades["weight"] + 1
-        trades["return"] = (trades["winsorized_return"] - 1) * trades["weight"] + 1
+        trades["weighted_return"] = (trades["stoploss_return"]-1) * trades["weight"]
+        trades["return"] = (trades["winsorized_return"] - 1) * trades["weight"]
         return trades
     
     def recs(self,sim):
@@ -107,8 +107,10 @@ class Portfolio(object):
     
     def portfolio(self, trades, benchmark):
         # Portfolio calculations
-        portfolio = trades.groupby(["year",self.timeframe.value], as_index=False).agg({"date":"last","weighted_return":"mean","return": "mean"}).reset_index()
+        portfolio = trades.groupby(["year",self.timeframe.value], as_index=False).agg({"date":"last","weighted_return":"sum","return": "sum"}).reset_index()
         # Convert year and timeframe into a proper date format  # Ensure it's correctly accessed
+        portfolio["weighted_return"] = portfolio["weighted_return"] + 1
+        portfolio["return"] = portfolio["return"] + 1
         portfolio = p.lower_column(portfolio)
         portfolio = p.utc_date(portfolio).sort_values("date")
         portfolio["pnl"] = portfolio["return"].cumprod()

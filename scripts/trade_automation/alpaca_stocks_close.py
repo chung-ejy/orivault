@@ -9,6 +9,8 @@ from common.database.adatabase import ADatabase
 from common.extractor.alpaca_extractor import AlpacaExtractor  
 from financial_common.portfolio_management.portfolio import Portfolio
 import pandas as pd
+from time import sleep
+
 paper = False
 orivault = ADatabase("ori")
 alp = AlpacaExtractor(paper=paper)
@@ -24,6 +26,7 @@ pm = Portfolio.from_dict(top)
 if end.hour == 14: ## close positions
     positions = alp.positions()
     alp.cancel_orders()
+    sleep(60)
     for row in positions.iterrows():
         position = row[1]
         ticker = str(position["symbol"])

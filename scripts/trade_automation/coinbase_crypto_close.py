@@ -31,7 +31,7 @@ if end.hour == 14:
     for order in orders:
         coin.client.cancel_orders([order.order_id for order in orders])
 
-    sleep(5)
+    sleep(60)
     for account in accounts["accounts"]:
         try:
             ticker = str(account.currency) + "-USD"

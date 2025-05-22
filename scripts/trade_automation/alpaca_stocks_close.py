@@ -21,7 +21,7 @@ recs = orivault.retrieve("recommendations")
 orivault.disconnect()
 pm = Portfolio.from_dict(top)
 
-if end.hour == 15: ## close positions
+if end.hour == 14: ## close positions
     positions = alp.positions()
     alp.cancel_orders()
     for row in positions.iterrows():

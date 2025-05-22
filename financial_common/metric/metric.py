@@ -1,6 +1,8 @@
 from enum import Enum
 from scipy.stats.mstats import winsorize
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.cluster import KMeans
 
 class Metric(Enum):
     AVERAGE_RETURN = ("average_return", lambda: AverageReturn())
@@ -85,7 +87,6 @@ class StandardDev:
         cols = Metric.get_columns(live)
         return price[cols["price"]].rolling(timeframe).std()
 
-import numpy as np
 
 class Distance:
     @staticmethod
@@ -112,7 +113,37 @@ class Distance:
         norm_factor = (x_scaled**2 + y_scaled**2 + w_scaled**2 + z_scaled**2) ** (1/2)
 
         return norm_factor
-    
+
+import numpy as np
+import pandas as pd
+
+
+class KMeansDistance:
+    @staticmethod
+    def calculate(price, timeframe, live, k=3):
+        cols = Metric.get_columns(live)
+
+        # Compute raw values with winsorization and backfilling NaNs
+        w = winsorize(price["dividend"].rolling(window=timeframe).mean().bfill().values, [0.01, 0.01])
+        x = winsorize(price[cols["price"]].rolling(window=timeframe).mean().bfill().values, [0.01, 0.01])
+        y = winsorize(price[cols["price"]].pct_change(5).rolling(window=timeframe).std().bfill().values, [0.01, 0.01])
+        z = winsorize(price[cols["price"]].pct_change(5).rolling(window=timeframe).mean().bfill().values, [0.01, 0.01])
+
+        # Combine features into a DataFrame
+        data = pd.DataFrame({'w': w, 'x': x, 'y': y, 'z': z})
+
+        # Scale data to range [-1,1]
+        scaler = MinMaxScaler(feature_range=(-1, 1))
+        scaled_data = scaler.fit_transform(data)
+
+        # Apply K-Means clustering
+        kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
+        clusters = kmeans.fit_predict(scaled_data)
+
+        # Ensure cluster labels are integer type
+        data['Cluster'] = clusters.astype(int)
+
+        return data, kmeans.cluster_centers_   
 
 class RollingDollarVolume:
     @staticmethod

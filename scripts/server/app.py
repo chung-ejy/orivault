@@ -120,7 +120,7 @@ def backtest():
     pm = Portfolio.from_dict(data)
     benchmark = alp.prices("SPY",start,end)
     benchmark = Benchmark.convert_to_benchmark(benchmark,"adjclose")
-    trades = pm.trades(simulation.copy()).sort_values("group_percentile", ascending=False)
+    trades = pm.trades(simulation.copy()).sort_values("date", ascending=False)
     portfolio = pm.portfolio(trades,benchmark)
     portfolio["date"] = [x.strftime("%Y-%m-%d") for x in portfolio["date"]]
     trades["date"] = [x.strftime("%Y-%m-%d") for x in trades["date"]]

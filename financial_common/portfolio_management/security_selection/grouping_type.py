@@ -8,6 +8,7 @@ class GroupingType(Enum):
     DRAWDOWN =  "drawdown"
     DISTANCE = "distance"
     DIVIDEND = "dividend"
+    COOKED_RETURN = "cooked_return"
     # GICS = "GICS Sector"
     # GICS_SUB = "GICS Sub-Industry"
     @classmethod

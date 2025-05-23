@@ -1,8 +1,6 @@
 from enum import Enum
 from scipy.stats.mstats import winsorize
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.cluster import KMeans
 
 class Metric(Enum):
     AVERAGE_RETURN = ("average_return", lambda: AverageReturn())
@@ -11,6 +9,7 @@ class Metric(Enum):
     SIMPLE_MOVING_AVERAGE = ("simple_moving_average", lambda: SimpleMovingAverage())
     DRAWDOWN = ("drawdown", lambda: Drawdown())
     DISTANCE = ("distance", lambda: Distance())
+    COOKED_RETURN = ("cooked_return", lambda: CookedReturn())
     NEXT_CLOSE = ("next_close", lambda: NextClose())
     DIVIDEND = ("dividend",lambda: Dividend())
     PriceToReturn = ("price_to_return",lambda: PriceToReturn())
@@ -111,40 +110,19 @@ class Distance:
 
         # Compute normalized factor
         norm_factor = (x_scaled**2 + y_scaled**2 + w_scaled**2 + z_scaled**2) ** (1/2)
-
         return norm_factor
 
-import numpy as np
-import pandas as pd
-
-
-class KMeansDistance:
+class CookedReturn:
     @staticmethod
-    def calculate(price, timeframe, live, k=3):
+    def calculate(price, timeframe, live):
         cols = Metric.get_columns(live)
-
-        # Compute raw values with winsorization and backfilling NaNs
+        # Compute raw values with winsorization
         w = winsorize(price["dividend"].rolling(window=timeframe).mean().bfill().values, [0.01, 0.01])
-        x = winsorize(price[cols["price"]].rolling(window=timeframe).mean().bfill().values, [0.01, 0.01])
-        y = winsorize(price[cols["price"]].pct_change(5).rolling(window=timeframe).std().bfill().values, [0.01, 0.01])
-        z = winsorize(price[cols["price"]].pct_change(5).rolling(window=timeframe).mean().bfill().values, [0.01, 0.01])
-
-        # Combine features into a DataFrame
-        data = pd.DataFrame({'w': w, 'x': x, 'y': y, 'z': z})
-
-        # Scale data to range [-1,1]
-        scaler = MinMaxScaler(feature_range=(-1, 1))
-        scaled_data = scaler.fit_transform(data)
-
-        # Apply K-Means clustering
-        kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
-        clusters = kmeans.fit_predict(scaled_data)
-
-        # Ensure cluster labels are integer type
-        data['Cluster'] = clusters.astype(int)
-
-        return data, kmeans.cluster_centers_   
-
+        y = winsorize(price[cols["price"]].pct_change(5).rolling(window=timeframe).std().bfill(), [0.01, 0.01])
+        z = winsorize(price[cols["price"]].pct_change(5).rolling(window=timeframe).mean().bfill(), [0.01, 0.01])
+        norm_factor = (1+w) * (1-y) * (1+z)
+        return norm_factor  
+    
 class RollingDollarVolume:
     @staticmethod
     def calculate(price, timeframe, live):

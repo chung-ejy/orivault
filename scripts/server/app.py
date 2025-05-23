@@ -107,8 +107,9 @@ def backtest():
                     price["dividend"] = 0
                 price.sort_values("date", inplace=True)
                 price = p.additional_date_columns(price)
-                price = Metric.indicator_type_factory(data["grouping_type"].lower()).calculate(price,timeframe=rolling_window,live=True)
-                price = Indicator.indicator_type_factory(data["ranking_metric"].lower()).calculate(price,timeframe=rolling_window,live=True)
+                price = Metric.NEXT_CLOSE.calculate(price,timeframe=rolling_window,live=False)
+                price = Metric.indicator_type_factory(data["grouping_type"].lower()).calculate(price,timeframe=rolling_window,live=False)
+                price = Indicator.indicator_type_factory(data["ranking_metric"].lower()).calculate(price,timeframe=rolling_window,live=False)
                 price = RiskType.risk_type_factory(data["risk_type"].lower()).apply(price)
                 prices.append(price)
             except Exception as e:

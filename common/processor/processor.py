@@ -41,4 +41,5 @@ class Processor(object):
         data["quarter"] = data["date"].dt.quarter
         data["week"] = data["date"].dt.isocalendar().week
         data["day"] = data["date"].dt.dayofyear
+        data["weekday"] = data["date"].dt.weekday
         return data

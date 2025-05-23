@@ -117,10 +117,14 @@ class CookedReturn:
     def calculate(price, timeframe, live):
         cols = Metric.get_columns(live)
         # Compute raw values with winsorization
+        def scale_to_range(arr):
+            return 2 * (arr - np.nanmin(arr)) / (np.nanmax(arr) - np.nanmin(arr) + 1e-6) - 1
         w = winsorize(price["dividend"].rolling(window=timeframe).mean().bfill().values, [0.01, 0.01])
+        x = winsorize((price[cols["price"]] * price[cols["volume"]]).rolling(window=timeframe).mean().bfill(), [0.01, 0.01])
         y = winsorize(price[cols["price"]].pct_change(5).rolling(window=timeframe).std().bfill(), [0.01, 0.01])
         z = winsorize(price[cols["price"]].pct_change(5).rolling(window=timeframe).mean().bfill(), [0.01, 0.01])
-        norm_factor = (1+w) * (1-y) * (1+z)
+        x_scaled = scale_to_range(x) * 100
+        norm_factor = (1+w) * (1-y) * (1+z) * x_scaled
         return norm_factor  
     
 class RollingDollarVolume:

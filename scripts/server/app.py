@@ -83,7 +83,7 @@ def backtest():
     end = pd.to_datetime(alp.clock()["date"])
     rolling_window = data["rolling_window"]
     delta_days = 365 + rolling_window
-    index = pd.read_html("https://en.wikipedia.org/wiki/S%26P_100",attrs={"id":"constituents"})[0].rename(columns={"Symbol":"ticker"})
+    index = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",attrs={"id":"constituents"})[0].rename(columns={"Symbol":"ticker"})
     tickers_per_batch = int(10000/delta_days/2)
     end = alp.clock()["date"] - timedelta(days=1)
     start = (end - timedelta(days=delta_days))

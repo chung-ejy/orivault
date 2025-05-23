@@ -19,7 +19,7 @@ top = orivault.retrieve("results").to_dict("records")[0]
 orivault.disconnect()
 pm = Portfolio.from_dict(top)
 
-if end.weekday <= 4 and end.hour ==  15: ## open positions
+if end.weekday() <= 4 and end.hour ==  15: ## open positions
     account = alp.account()
     cash = round(float(account["cash"]),2)
     orivault.cloud_connect()

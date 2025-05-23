@@ -23,7 +23,7 @@ recs = orivault.retrieve("recommendations")
 orivault.disconnect()
 pm = Portfolio.from_dict(top)
 
-if end.weekday <= 4 and end.hour ==  14: ## close positions
+if end.weekday() <= 4 and end.hour ==  14: ## close positions
     positions = alp.positions()
     for row in positions.iterrows():
         position = row[1]

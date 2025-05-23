@@ -27,7 +27,7 @@ coinbase = CoinbaseExtractor()
 end = pd.to_datetime(alp.clock()["date"])
 
 
-if end.weekday <= 4 and end.hour ==  9:
+if end.weekday() <= 4 and end.hour ==  9:
     tickers = pd.DataFrame([x.__dict__ for x in coinbase.client.get_accounts()["accounts"] if x.currency != "USD" and x.currency != "USDT"])
     tickers = tickers[["name","currency","active"]][tickers["active"]==True]
     tickers["ticker"] = tickers["currency"] + "-USD"

@@ -23,7 +23,7 @@ ori.disconnect()
 
 # # closing
 
-if end.weekday <= 4 and end.hour ==  14:
+if end.weekday() <= 4 and end.hour ==  14:
     portfolio_uuid = coin.client.get_portfolios("DEFAULT")["portfolios"][0]["uuid"]
     portfolio = coin.client.get_portfolio_breakdown(portfolio_uuid)
     accounts = coin.client.get_accounts()

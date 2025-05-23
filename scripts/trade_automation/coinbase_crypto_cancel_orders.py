@@ -23,24 +23,10 @@ ori.disconnect()
 
 # # closing
 
-if end.hour == 14:
+if end.hour == 13:
     portfolio_uuid = coin.client.get_portfolios("DEFAULT")["portfolios"][0]["uuid"]
     portfolio = coin.client.get_portfolio_breakdown(portfolio_uuid)
     accounts = coin.client.get_accounts()
-    for account in accounts["accounts"]:
-        try:
-            ticker = str(account.currency) + "-USD"
-            amount = float(account.available_balance["value"])
-            if amount > 0.01 and "USD" not in ticker.split("-")[0]:
-                bid_ask = coin.client.get_best_bid_ask(ticker)["pricebooks"][0]
-                bid = float(bid_ask["bids"][0]["price"])
-                ask = float(bid_ask["asks"][0]["price"])    
-                sell_order_id = Utils.generate_client_order_id()
-                print(coin.client.limit_order_fok_sell(
-                                        client_order_id=sell_order_id
-                                        ,product_id=ticker
-                                        ,limit_price=str(bid) 
-                                        ,base_size=str(amount)))
-        except Exception as e:
-            print(str(e))
-            continue
+    orders = coin.client.list_orders(order_status="OPEN")["orders"]
+    for order in orders:
+        coin.client.cancel_orders([order.order_id for order in orders])

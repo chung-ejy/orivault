@@ -17,7 +17,7 @@ class Portfolio(object):
 
     def __init__(self, timeframe, ranking_metric, position_type, grouping_type, selection_type,  \
                  allocation_type, risk_type, selection_percentage, num_of_groups , \
-                    stoploss,max_price,min_price,rolling_window):
+                    stoploss,max_price,min_price,rolling_window,leverage):
         self.ranking_metric = ranking_metric  # Metric used to rank the securities
         self.timeframe = Timeframe.timeframe_factory(timeframe)  # Timeframe of the assets (e.g., week, month, quarter)
         self.position_type = PositionType.get_position_type(position_type)
@@ -31,6 +31,7 @@ class Portfolio(object):
         self.max_price = max_price  # Maximum price for filtering securities
         self.min_price = min_price  # Minimum price for filtering securities
         self.rolling_window = rolling_window  # Rolling window for calculations
+        self.leverage = leverage
 
     def trades(self, sim):
         trades = self.timeframe_trades(sim.copy())
@@ -38,8 +39,8 @@ class Portfolio(object):
         trades["unweighted_return"] = (trades["sell_price"] / trades["adjclose"] - 1) * trades["position_type"] + 1
         trades["stoploss_return"] = [max(1 - self.stoploss, x) for x in trades["unweighted_return"]]
         trades["winsorized_return"] = winsorize(trades["stoploss_return"].copy(), [0.01, 0.01])
-        trades["weighted_return"] = (trades["stoploss_return"]-1) * trades["weight"]
-        trades["return"] = (trades["winsorized_return"] - 1) * trades["weight"]
+        trades["weighted_return"] = (trades["stoploss_return"]-1) * self.leverage * trades["weight"]
+        trades["return"] = (trades["winsorized_return"] - 1) * self.leverage * trades["weight"]
         return trades
     
     def recs(self,sim):
@@ -148,7 +149,8 @@ class Portfolio(object):
             num_of_groups=int(data["num_of_groups"]),
             max_price=int(data["max_price"]),
             min_price=int(data["min_price"]),
-            rolling_window=int(data["rolling_window"])
+            rolling_window=int(data["rolling_window"]),
+            leverage=int(data["leverage"])
         )
 
 

@@ -13,7 +13,7 @@ from itertools import product
 class PortfolioSelection:
     
     @staticmethod
-    def generate_possible_portfolios(ranking_metrics,group_percentages,num_of_groups,max_prices,min_prices,stoplosses,rolling_windows):
+    def generate_possible_portfolios(ranking_metrics,group_percentages,num_of_groups,max_prices,min_prices,stoplosses,rolling_windows,leverages):
         """
         Generate all possible portfolios based on the given parameters.
 
@@ -28,8 +28,8 @@ class PortfolioSelection:
         """
         # Generate portfolios for all combinations of parameters
         portfolios = []
-        for ranking_metric, timeframe, group_percentage, grouping_type, selection_type, allocation_type, risk_type, position_type, num_of_group, max_price, min_price, stoploss, rolling_window in product(
-            ranking_metrics, Timeframe, group_percentages, GroupingType, SelectionType, AllocationType, RiskType, PositionType, num_of_groups, max_prices, min_prices, stoplosses, rolling_windows):
+        for ranking_metric, timeframe, group_percentage, grouping_type, selection_type, allocation_type, risk_type, position_type, num_of_group, max_price, min_price, stoploss, rolling_window, leverage in product(
+            ranking_metrics, Timeframe, group_percentages, GroupingType, SelectionType, AllocationType, RiskType, PositionType, num_of_groups, max_prices, min_prices, stoplosses, rolling_windows, leverages):
             
             portfolio = Portfolio(
                 ranking_metric=ranking_metric,
@@ -44,7 +44,8 @@ class PortfolioSelection:
                 stoploss=stoploss,
                 max_price=max_price,
                 min_price=min_price,
-                rolling_window=rolling_window
+                rolling_window=rolling_window,
+                leverage=leverage
             )
             portfolios.append(portfolio)
         

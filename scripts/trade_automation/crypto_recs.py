@@ -37,7 +37,7 @@ end = pd.to_datetime(alp.clock()["date"])
 start = end - timedelta(days=200)
 
 
-if end.hour == 9:
+if end.weekday <= 4 and end.hour ==  9:
     prices = []
     for ticker in index["ticker"]: 
         try:

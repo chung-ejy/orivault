@@ -23,7 +23,7 @@ top = ori.retrieve("crypto_results").to_dict("records")[0]
 ori.disconnect()
 pm = Portfolio.from_dict(top)
 
-if end.hour == 15:
+if end.weekday <= 4 and end.hour ==  15:
     accounts = coin.client.get_accounts()
     cash = float([x.available_balance["value"] for x in accounts["accounts"] if x.currency == "USD"][0])
     for row in recs.iterrows():

@@ -23,7 +23,7 @@ ori.disconnect()
 
 pm = Portfolio.from_dict(top)
 
-if end.hour == 16:
+if end.weekday <= 4 and end.hour ==  16:
     portfolio_uuid = coin.client.get_portfolios("DEFAULT")["portfolios"][0]["uuid"]
     portfolios = [x.__dict__ for x in coin.client.get_portfolio_breakdown(portfolio_uuid)["breakdown"].__dict__["spot_positions"]]
     positions = pd.DataFrame(portfolios)

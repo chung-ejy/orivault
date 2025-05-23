@@ -23,5 +23,5 @@ recs = orivault.retrieve("recommendations")
 orivault.disconnect()
 pm = Portfolio.from_dict(top)
 
-if end.hour == 13:
+if end.weekday <= 4 and end.hour ==  13:
     alp.cancel_orders()

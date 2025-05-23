@@ -127,7 +127,7 @@ def backtest():
     performance = KPI.performance(trades,portfolio)
     response = base_response()
     backtest_data = {
-        "trades":trades[["date","ticker","return","weight","adjclose","sell_price"]].dropna().round(4).to_dict("records"),
+        "trades":trades[["date","ticker","winsorized_return","weight","adjclose","sell_price"]].dropna().round(4).to_dict("records"),
         "portfolio":portfolio[["date","pnl","benchmark_pnl"]].dropna().round(4).to_dict("records"),
         "metrics":pd.DataFrame([performance]).dropna().round(3).to_dict("records")[0]
     }

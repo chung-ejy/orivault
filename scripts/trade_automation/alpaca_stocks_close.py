@@ -25,8 +25,6 @@ pm = Portfolio.from_dict(top)
 
 if end.hour == 14: ## close positions
     positions = alp.positions()
-    alp.cancel_orders()
-    sleep(60)
     for row in positions.iterrows():
         position = row[1]
         ticker = str(position["symbol"])

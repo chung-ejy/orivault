@@ -135,11 +135,22 @@ class Portfolio(object):
         }
     @staticmethod
     def from_dict(data):
-        return Portfolio(timeframe=data["timeframe"].lower()
-                         , ranking_metric=data["ranking_metric"], position_type=data["position_type"]
-                         , grouping_type=data["grouping_type"].lower(), selection_type=data["selection_type"]
-                         , allocation_type=data["allocation_type"], risk_type=data["risk_type"], selection_percentage=data["selection_percentage"]
-                         , stoploss=data["stoploss"], num_of_groups=data["num_of_groups"],max_price=data["max_price"],min_price=data["min_price"],rolling_window=data["rolling_window"])
+        return Portfolio(
+            timeframe=str(data["timeframe"]).lower(),
+            ranking_metric=str(data["ranking_metric"]),
+            position_type=str(data["position_type"]),
+            grouping_type=str(data["grouping_type"]).lower(),
+            selection_type=str(data["selection_type"]),
+            allocation_type=str(data["allocation_type"]),
+            risk_type=str(data["risk_type"]),
+            selection_percentage=float(data["selection_percentage"]),
+            stoploss=float(data["stoploss"]),
+            num_of_groups=int(data["num_of_groups"]),
+            max_price=int(data["max_price"]),
+            min_price=int(data["min_price"]),
+            rolling_window=int(data["rolling_window"])
+        )
+
 
 class OptimizedPortfolio(Portfolio):
     """

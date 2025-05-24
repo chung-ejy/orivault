@@ -91,7 +91,7 @@ class BottomBlackListSelection:
 
             current_blacklist.update(daily_trade["ticker"])  
 
-            if len(current_blacklist) >= 3:  # More robust check
+            if len(current_blacklist) >= daily_trade["group_percentile"].astype(int).max():  # More robust check
                 previous_blacklist, current_blacklist = current_blacklist.copy(), set()  
 
         top = pd.concat(filtered_trades, ignore_index=True)  # `ignore_index=True` for efficiency

@@ -32,12 +32,11 @@ if end.weekday() <= 4 and end.hour ==  9:
     tickers = tickers[["name","currency","active"]][tickers["active"]==True]
     tickers["ticker"] = tickers["currency"] + "-USD"
 
-    alpaca_tickers = pd.DataFrame(alp.assets()).rename(columns={"symbol":"ticker"})
-    relevant_tickers = alpaca_tickers[(alpaca_tickers["tradable"]==True) & (~alpaca_tickers["exchange"].isin(["OTC","CRYPTO"]))].copy()[["ticker","fractionable","exchange"]]
+    alpaca_tickers = pd.DataFrame(alp.assets())
 
     market.cloud_connect()
     market.drop("ticker_overview")
-    market.store("ticker_overview",relevant_tickers)
+    market.store("ticker_overview",alpaca_tickers)
     market.disconnect()
 
     market.cloud_connect()

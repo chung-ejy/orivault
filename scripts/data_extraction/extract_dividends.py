@@ -31,7 +31,7 @@ index = market.retrieve("index")
 market.drop("dividends")
 
 tickers = list(index["ticker"].unique())
-batchs = [tickers[i:i + 4] for i in range(0, len(tickers), 4)]
+batchs = [tickers[i:i + 5] for i in range(0, len(tickers), 5)]
 for batch in tqdm(batchs):
     try:
         tickers_data = alp.dividends(batch,start,end).rename(columns={"symbol":"ticker","record_date":"date"})[["date","rate","ticker"]]

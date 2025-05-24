@@ -20,7 +20,9 @@ class AlpacaExtractor(object):
     def assets(self):
         url = "https://api.alpaca.markets/v2/assets"
         requestBody = r.get(url,headers=self.headers)
-        return requestBody.json()
+        data = pd.DataFrame(requestBody.json()).rename(columns={"symbol":"ticker"})
+        relevant_tickers = data[(data["marginable"]==True) & (data["tradable"]==True) & (~data["exchange"].isin(["OTC","CRYPTO"]))].copy()[["ticker","marginable","exchange"]]
+        return relevant_tickers
     
     def clock(self):
         url = self.domain + "/v2/clock"

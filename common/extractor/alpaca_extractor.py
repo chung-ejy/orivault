@@ -40,6 +40,14 @@ class AlpacaExtractor(object):
         data["date"] = datetime.fromisoformat(iso_fixed)
         return data
     
+    def latest_quote(self,ticker):
+        params = {
+            "feed":"delayed_sip"
+        }
+        url = f"https://data.alpaca.markets/v2/stocks/{ticker}/quotes/latest"
+        requestBody = r.get(url,params=params,headers=self.headers)
+        return requestBody.json()["quote"]
+    
     def latest_bar(self,ticker):
         params = {
             "feed":"delayed_sip"
@@ -47,6 +55,24 @@ class AlpacaExtractor(object):
         url = f"https://data.alpaca.markets/v2/stocks/{ticker}/bars/latest"
         requestBody = r.get(url,params=params,headers=self.headers)
         return requestBody.json()["bar"]
+    
+    def latest_bars_bulk(self,tickers):
+        tickers_string = ",".join(tickers)
+        params = {
+            "symbols":tickers_string,
+            "feed":"delayed_sip"
+        }
+        url = "https://data.alpaca.markets/v2/stocks/bars/latest"
+        requestBody = r.get(url,params=params,headers=self.headers)
+        prices = []
+        for ticker in tickers:
+            try:
+                data =  pd.DataFrame([requestBody.json()["bars"][ticker]]).rename(columns={"h":"high","l":"low","v":"volume","c":"adjclose","t":"date"})[["date","adjclose","high","low","volume"]]
+                data["ticker"] = ticker
+                prices.append(data)
+            except Exception as e:
+                print(str(e))
+        return pd.concat(prices)
     
     def prices_bulk(self,tickers,start,end):
         tickers_string = ",".join(tickers)

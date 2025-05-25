@@ -11,13 +11,15 @@ from common.processor.processor import Processor as p
 from enum import Enum
 import warnings
 import pandas as pd
+import numpy as np
+
 warnings.simplefilter(action='ignore')
 
 class Portfolio(object):
 
     def __init__(self, timeframe, ranking_metric, position_type, grouping_type, selection_type,  \
                  allocation_type, risk_type, selection_percentage, num_of_groups , \
-                    stoploss,max_price,min_price,rolling_window,leverage):
+                    stoploss,max_price,min_price,max_market_cap,min_market_cap,rolling_window,leverage):
         self.ranking_metric = ranking_metric  # Metric used to rank the securities
         self.timeframe = Timeframe.timeframe_factory(timeframe)  # Timeframe of the assets (e.g., week, month, quarter)
         self.position_type = PositionType.get_position_type(position_type)
@@ -30,18 +32,39 @@ class Portfolio(object):
         self.num_of_groups = num_of_groups  # Number of groups to divide the securities into
         self.max_price = max_price  # Maximum price for filtering securities
         self.min_price = min_price  # Minimum price for filtering securities
+        self.max_market_cap = max_market_cap  # Maximum price for filtering securities
+        self.min_market_cap = min_market_cap  # Minimum price for filtering securities
         self.rolling_window = rolling_window  # Rolling window for calculations
         self.leverage = leverage
 
     def trades(self, sim):
         trades = self.timeframe_trades(sim.copy())
         trades = self.allocations(trades)
-        trades["unweighted_return"] = (trades["sell_price"] / trades["adjclose"] - 1) * trades["position_type"] + 1
-        trades["stoploss_return"] = [max(1 - self.stoploss, x) for x in trades["unweighted_return"]]
-        trades["winsorized_return"] = winsorize(trades["stoploss_return"].copy(), [0.01, 0.01])
-        trades["weighted_return"] = (trades["stoploss_return"]-1) * self.leverage * trades["weight"]
+        trades["close_return"] = (trades["sell_price"] / trades["adjclose"] - 1) * trades["position_type"] + 1
+
+        # Calculate low return with correct position type handling
+        trades["low_return"] = np.where(
+            trades["position_type"] == 1,
+            (trades["sell_low"] / trades["adjclose"] - 1) * trades["position_type"] + 1,
+            (trades["sell_high"] / trades["adjclose"] - 1) * trades["position_type"] + 1
+        )
+
+        # Select final return based on stop-loss condition
+        trades["unweighted_return"] = np.where(
+            trades["low_return"] < 1 - self.stoploss,
+            1 - self.stoploss,  # If stop-loss is hit, use stop-loss return
+            trades["close_return"]
+        )
+
+        # Winsorize returns
+        trades["winsorized_return"] = winsorize(trades["unweighted_return"].copy(), limits=[0.05, 0.05])
+
+        # Compute weighted return
+        trades["weighted_return"] = (trades["unweighted_return"] - 1) * self.leverage * trades["weight"]
         trades["return"] = (trades["winsorized_return"] - 1) * self.leverage * trades["weight"]
+
         return trades
+
     
     def recs(self,sim):
         filtered_sim = sim.sort_values("date").groupby(["year",self.timeframe.value,"ticker"]).first().reset_index().sort_values("date")
@@ -52,6 +75,8 @@ class Portfolio(object):
     def allocations(self,sim):
         sim = sim[sim["adjclose"] >= self.min_price]
         sim = sim[sim["adjclose"] <= self.max_price]
+        sim = sim[sim["market_cap"] >= self.min_market_cap]
+        sim = sim[sim["market_cap"] <= self.max_market_cap]
         trades = self.group_percentile_labeling(sim)
         trades = self.ranking_percentile_labeling(trades)
         trades = self.postprocessing(trades)
@@ -61,8 +86,10 @@ class Portfolio(object):
     
     def timeframe_trades(self,sim):
         sim["sell_price"] = sim["adjclose"] if self.timeframe.value != "day" else sim["next_close"]
+        sim["sell_high"] = sim["high"] if self.timeframe.value != "day" else sim["next_high"]
+        sim["sell_low"] = sim["low"] if self.timeframe.value != "day" else sim["next_low"]
         sim["sell_date"] = sim["date"]
-        query = {"date":"last","adjclose":"first","sell_price":"last"}
+        query = {"date":"last","market_cap":"first","adjclose":"first","sell_price":"last","sell_high":"last","sell_low":"last"}
         query[self.grouping_type.value] = "first"
         query[self.ranking_metric] = "first"
         query[self.risk_type.label] = "first"
@@ -75,7 +102,6 @@ class Portfolio(object):
         sim.rename(columns={self.risk_type.label: "risk"}, inplace=True)
         sim["major_key"] = sim["year"].astype(str) + "_" + sim[self.timeframe.value].astype(str) + "_" + sim["group_percentile"].astype(str)
         return sim
-    
     
     def group_percentile_labeling(self,sim):
         index = ["year", self.timeframe.value]
@@ -147,8 +173,10 @@ class Portfolio(object):
             selection_percentage=float(data["selection_percentage"]),
             stoploss=float(data["stoploss"]),
             num_of_groups=int(data["num_of_groups"]),
-            max_price=int(data["max_price"]),
-            min_price=int(data["min_price"]),
+            max_price=float(data["max_price"]),
+            min_price=float(data["min_price"]),
+            max_market_cap=float(data["max_market_cap"]),
+            min_market_cap=float(data["min_market_cap"]),
             rolling_window=int(data["rolling_window"]),
             leverage=int(data["leverage"])
         )

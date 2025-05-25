@@ -44,32 +44,26 @@ if end.weekday() <= 4 and end.hour ==  9:
     batchs = [tickers[i:i + tickers_per_batch] for i in range(0, len(tickers), tickers_per_batch)]
     for batch in batchs:
         tickers_data = alp.prices_bulk(batch,start,end)
-        dividends = alp.dividends(batch,start,end).rename(columns={"symbol":"ticker","record_date":"date"})[["date","rate","ticker"]]
         sleep(0.35)
         for ticker in batch:
             try:
                 price = tickers_data[tickers_data["ticker"] == ticker].copy()
-                dividends = dividends[dividends["ticker"]==ticker].copy()
                 price = p.lower_column(price)
                 price = p.utc_date(price)
-                if dividends.index.size > 0:
-                    dividends = p.utc_date(dividends)
-                    price = price.merge(dividends,on=["date","ticker"])
-                    price["dividend"] = price["rate"].ffill().fillna(0)
-                else:
-                    price["dividend"] = 0
                 price.sort_values("date", inplace=True)
                 price = p.additional_date_columns(price)
-                price = Metric.indicator_type_factory(top["grouping_type"].lower()).calculate(price,timeframe=rolling_window,live=True)
-                price = Indicator.indicator_type_factory(top["ranking_metric"].lower()).calculate(price,timeframe=rolling_window,live=True)
-                price = RiskType.risk_type_factory(top["risk_type"].lower()).apply(price)
-                prices.append(price)
+                price["market_cap"] = price["adjclose"] * price["volume"]
+                if price[(price["adjclose"]<=0.1) & (price["adjclose"]>=0.01)].index.size > 0:
+                    price = Metric.indicator_type_factory(top["grouping_type"].lower()).calculate(price,timeframe=rolling_window,live=True)
+                    price = Indicator.indicator_type_factory(top["ranking_metric"].lower()).calculate(price,timeframe=rolling_window,live=True)
+                    price = RiskType.risk_type_factory(top["risk_type"].lower()).apply(price)
+                    prices.append(price)
             except Exception as e:
                 print(str(e))
 
     simulation = pd.concat(prices)
     simulation.sort_values("date", inplace=True)
-    trades = pm.recs(simulation.copy()).sort_values("group_percentile", ascending=False)
+    trades = pm.recs(simulation.copy())
 
     orivault.cloud_connect()
     orivault.drop("recommendations")

@@ -11,6 +11,8 @@ class Metric(Enum):
     DISTANCE = ("distance", lambda: Distance())
     COOKED_RETURN = ("cooked_return", lambda: CookedReturn())
     NEXT_CLOSE = ("next_close", lambda: NextClose())
+    NEXT_HIGH = ("next_high", lambda: NextHigh())
+    NEXT_LOW = ("next_low", lambda: NextLow())
     DIVIDEND = ("dividend",lambda: Dividend())
     PriceToReturn = ("price_to_return",lambda: PriceToReturn())
 
@@ -33,20 +35,12 @@ class Metric(Enum):
     @classmethod
     def get_columns(cls, live):
         """Return column mappings based on live or non-live mode."""
-        if live:
-            return {
-                "price": "adjclose",
-                "high": "high",
-                "low": "low",
-                "volume": "volume"
-            }
-        else:
-            return {
-                "price": "reference_price",
-                "high": "reference_high",
-                "low": "reference_low",
-                "volume": "reference_volume"
-            }
+        return {
+            "price": "adjclose",
+            "high": "high",
+            "low": "low",
+            "volume": "volume"
+        }
 
     @classmethod
     def indicator_type_factory(cls, indicator_type):
@@ -68,6 +62,18 @@ class NextClose:
         cols = Metric.get_columns(live)
         return price["adjclose"].shift(-1)
     
+class NextHigh:
+    @staticmethod
+    def calculate(price, timeframe, live):
+        cols = Metric.get_columns(live)
+        return price["high"].shift(-1)
+    
+class NextLow:
+    @staticmethod
+    def calculate(price, timeframe, live):
+        cols = Metric.get_columns(live)
+        return price["low"].shift(-1)
+    
 class Drawdown:
     @staticmethod
     def calculate(price, timeframe, live):
@@ -85,7 +91,6 @@ class StandardDev:
     def calculate(price, timeframe, live):
         cols = Metric.get_columns(live)
         return price[cols["price"]].rolling(timeframe).std()
-
 
 class Distance:
     @staticmethod

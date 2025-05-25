@@ -8,6 +8,7 @@ class Indicator(Enum):
     SMACorr = ("sma_corr", lambda: SMACorrIndicator())
     EMA = ("ema", lambda: EMAIndicator())
     EMACorr = ("ema_corr", lambda: EMACorrIndicator())
+    HealthCheck = ("health_check", lambda: HealthCheck())
     BOLLINGER_UPPER = ("bollinger_upper", lambda: BollingerUpperIndicator())
     BOLLINGER_LOWER = ("bollinger_lower", lambda: BollingerLowerIndicator())
     MOMENTUM = ("momentum", lambda: MomentumIndicator())
@@ -24,33 +25,19 @@ class Indicator(Enum):
 
     def calculate(self, price, timeframe=100, live=False):
         """Calculate reference values, add computed indicator values to the dataframe, and return the updated dataframe."""
-        cols = self.get_columns(live)
-        if not live:
-            price[cols["price"]] = price["adjclose"].shift(1)
-            price[cols["volume"]] = price["volume"].shift(1)
-            price[cols["high"]] = price["high"].shift(1)
-            price[cols["low"]] = price["low"].shift(1)
-        
+        cols = self.get_columns(live)        
         price[self.label] = self.calculation_method().calculate(price, timeframe, live)
         return price
 
     @classmethod
     def get_columns(cls, live):
         """Return column mappings based on live or non-live mode."""
-        if live:
-            return {
-                "price": "adjclose",
-                "high": "high",
-                "low": "low",
-                "volume": "volume"
-            }
-        else:
-            return {
-                "price": "reference_price",
-                "high": "reference_high",
-                "low": "reference_low",
-                "volume": "reference_volume"
-            }
+        return {
+            "price": "adjclose",
+            "high": "high",
+            "low": "low",
+            "volume": "volume"
+        }
 
     @classmethod
     def indicator_type_factory(cls, indicator_type):
@@ -82,11 +69,19 @@ class SMACorrIndicator:
     @staticmethod
     def calculate(price, timeframe, live):
         cols = Indicator.get_columns(live)
-        rollings = price[cols["price"]].rolling(timeframe).mean() / price[cols["price"]] - 1
-        rollings_corr = rollings.rolling(timeframe).corr(price[cols["price"]])
-        direction = rollings_corr / rollings_corr.abs()
-        tax = price[cols["price"]].pct_change().rolling(timeframe).mean().abs() - 1
-        return rollings * direction  * tax
+        rollings = (price[cols["price"]].rolling(timeframe).mean() / price[cols["price"]] - 1)
+        rollings_corr = rollings.rolling(timeframe).corr(price[cols["price"]]) / rollings.rolling(timeframe).corr(price[cols["price"]]).abs()
+        spread = 1 - (price[cols["high"]] - price[cols["low"]]).rolling(timeframe).mean() / price[cols["price"]].rolling(timeframe).mean()
+        rollings_corr.replace([np.inf, -np.inf], np.nan, inplace=True)
+        return rollings * rollings_corr * spread
+
+class HealthCheck:
+    @staticmethod
+    def calculate(price, timeframe, live):
+        cols = Indicator.get_columns(live)
+        delta = price[cols["price"]].pct_change()
+        spread = (price[cols["high"]] - price[cols["low"]]) / price[cols["price"]]
+        return delta * spread * price["market_cap"]
     
 class EMAIndicator:
     @staticmethod
@@ -101,9 +96,10 @@ class EMACorrIndicator:
         rollings = (price[cols["price"]].ewm(span=timeframe, adjust=False).mean() / price[cols["price"]] - 1)
         rollings_corr = rollings.rolling(timeframe).corr(price[cols["price"]]) / rollings.rolling(timeframe).corr(price[cols["price"]]).abs()
         spread = 1 - (price[cols["high"]] - price[cols["low"]]).rolling(timeframe).mean() / price[cols["price"]].rolling(timeframe).mean()
+        volume = (price[cols["volume"]]).rolling(timeframe).mean() * price[cols["price"]].rolling(timeframe).mean()
         rollings_corr.replace([np.inf, -np.inf], np.nan, inplace=True)
-        return rollings * rollings_corr * spread
-    
+        return rollings * rollings_corr * spread * volume
+
 class BollingerUpperIndicator:
     @staticmethod
     def calculate(price, timeframe, live):

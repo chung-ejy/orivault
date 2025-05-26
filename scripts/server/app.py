@@ -19,6 +19,7 @@ from financial_common.portfolio_management.security_allocation.allocation_type i
 from financial_common.portfolio_management.security_selection.selection_type import SelectionType
 from financial_common.risk.benchmark import Benchmark
 from financial_common.portfolio_management.kpi import KPI
+from common.processor.utils import Utils
 import pandas as pd
 from datetime import timedelta
 from flask_cors import CORS  # Import Flask-CORS
@@ -80,12 +81,12 @@ def backtest():
     data = request.json  # Extract JSON data from the request body
     paper = False
     alp = AlpacaExtractor(paper=paper)
-    end = pd.to_datetime(alp.clock()["date"])
+    end = Utils.last_weekday(alp.clock())
     rolling_window = data["rolling_window"]
     delta_days = 365 + rolling_window
     index = pd.read_html("https://en.wikipedia.org/wiki/S%26P_100",attrs={"id":"constituents"})[0].rename(columns={"Symbol":"ticker"})
     tickers_per_batch = int(10000/delta_days/2)
-    end = alp.clock()["date"] - timedelta(days=1)
+    end = Utils.last_weekday(alp.clock())
     start = (end - timedelta(days=delta_days))
     prices = []
     tickers = list(index["ticker"].unique())

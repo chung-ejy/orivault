@@ -8,7 +8,6 @@ class Indicator(Enum):
     SMACorr = ("sma_corr", lambda: SMACorrIndicator())
     EMA = ("ema", lambda: EMAIndicator())
     EMACorr = ("ema_corr", lambda: EMACorrIndicator())
-    HealthCheck = ("health_check", lambda: HealthCheck())
     BOLLINGER_UPPER = ("bollinger_upper", lambda: BollingerUpperIndicator())
     BOLLINGER_LOWER = ("bollinger_lower", lambda: BollingerLowerIndicator())
     MOMENTUM = ("momentum", lambda: MomentumIndicator())
@@ -74,14 +73,6 @@ class SMACorrIndicator:
         spread = 1 - (price[cols["high"]] - price[cols["low"]]).rolling(timeframe).mean() / price[cols["price"]].rolling(timeframe).mean()
         rollings_corr.replace([np.inf, -np.inf], np.nan, inplace=True)
         return rollings * rollings_corr * spread
-
-class HealthCheck:
-    @staticmethod
-    def calculate(price, timeframe, live):
-        cols = Indicator.get_columns(live)
-        delta = price[cols["price"]].pct_change()
-        spread = (price[cols["high"]] - price[cols["low"]]) / price[cols["price"]]
-        return delta * spread * price["market_cap"]
     
 class EMAIndicator:
     @staticmethod

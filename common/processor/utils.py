@@ -20,13 +20,14 @@ class Utils(object):
         client_order_id = f"{prefix}_{timestamp}_{unique_id}"
         return client_order_id
 
+
     @staticmethod
     def last_weekday(ref_date=None):
         """
         Return:
         - 15 minutes before market close if it's after 4:00 PM or a weekend
         - 15 minutes before now if the market is currently open
-        - Otherwise, 15 minutes before prior market close
+        - Otherwise, 15 minutes before prior market close, pushed back one day unless it's a weekend
         """
         if ref_date is None:
             ref_date = datetime.now()
@@ -43,14 +44,21 @@ class Utils(object):
 
         # If after market close today, return 15 minutes before today's close
         if current_time >= market_close:
-            return ref_date.replace(hour=15, minute=45, second=0, microsecond=0)
+            final_date = ref_date.replace(hour=15, minute=45, second=0, microsecond=0)
 
         # If during market hours and after 9:45 AM, return 15 minutes before now
-        if current_time >= (datetime.combine(ref_date.date(), market_open) + fifteen_minutes).time():
-            return ref_date - fifteen_minutes
+        elif current_time >= (datetime.combine(ref_date.date(), market_open) + fifteen_minutes).time():
+            final_date = ref_date - fifteen_minutes
 
         # If it's before 9:45 AM, go to prior market day's close
-        prev_day = ref_date - timedelta(days=1)
-        while prev_day.weekday() > 4:
-            prev_day -= timedelta(days=1)
-        return prev_day.replace(hour=15, minute=45, second=0, microsecond=0)
+        else:
+            prev_day = ref_date - timedelta(days=1)
+            while prev_day.weekday() > 4:
+                prev_day -= timedelta(days=1)
+            final_date = prev_day.replace(hour=15, minute=45, second=0, microsecond=0)
+
+        # Push the final date back one day unless it's a weekend
+        if final_date.weekday() <= 4:  # Monday to Friday
+            final_date -= timedelta(days=1)
+
+        return final_date

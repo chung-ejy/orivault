@@ -129,12 +129,33 @@ class AlpacaExtractor(object):
             except Exception as e:
                 print(str(e))
         return pd.concat(prices)
-
+    
+    def prices_minute(self,tickers,start,end):
+        tickers_string = ",".join(tickers)
+        params = {
+            "symbols":tickers_string,
+            "adjustment":"all",
+            "timeframe":"10Min",
+            "feed":"sip",
+            "sort":"asc",
+            "start":start.strftime("%Y-%m-%d"),
+            "end":end.strftime("%Y-%m-%d")
+        }
+        url = "https://data.alpaca.markets/v2/stocks/bars"
+        requestBody = r.get(url,params=params,headers=self.headers)
+        print(requestBody.json())
+        prices = []
+        for ticker in tickers:
+            data =  pd.DataFrame(requestBody.json()["bars"][ticker]).rename(columns={"h":"high","l":"low","v":"volume","o":"open","c":"close","t":"date"})[["date","close","open","high","low","volume"]]
+            data["ticker"] = ticker
+            prices.append(data)
+        return pd.concat(prices)
+    
     def prices_hour(self,ticker,start,end):
         params = {
             "symbols":ticker,
             "adjustment":"all",
-            "timeframe":"10Min",
+            "timeframe":"1Hour",
             "feed":"sip",
             "sort":"asc",
             "start":start.strftime("%Y-%m-%d"),

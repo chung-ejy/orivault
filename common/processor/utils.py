@@ -1,5 +1,6 @@
 import uuid
 import time
+from datetime import datetime, timedelta, time as dtime
 
 class Utils(object):
 
@@ -14,12 +15,42 @@ class Utils(object):
         Returns:
             str: A unique client_order_id.
         """
-        # Use the current time in milliseconds
         timestamp = int(time.time() * 1000)
-        
-        # Generate a UUID4 string and take the first 8 characters
         unique_id = str(uuid.uuid4())[:8]
-        
-        # Combine prefix, timestamp, and unique identifier
         client_order_id = f"{prefix}_{timestamp}_{unique_id}"
         return client_order_id
+
+    @staticmethod
+    def last_weekday(ref_date=None):
+        """
+        Return:
+        - 15 minutes before market close if it's after 4:00 PM or a weekend
+        - 15 minutes before now if the market is currently open
+        - Otherwise, 15 minutes before prior market close
+        """
+        if ref_date is None:
+            ref_date = datetime.now()
+
+        market_open = dtime(hour=9, minute=30)
+        market_close = dtime(hour=16, minute=0)
+        fifteen_minutes = timedelta(minutes=15)
+
+        # If it's weekend, roll back to last weekday
+        while ref_date.weekday() > 4:  # Saturday = 5, Sunday = 6
+            ref_date -= timedelta(days=1)
+
+        current_time = ref_date.time()
+
+        # If after market close today, return 15 minutes before today's close
+        if current_time >= market_close:
+            return ref_date.replace(hour=15, minute=45, second=0, microsecond=0)
+
+        # If during market hours and after 9:45 AM, return 15 minutes before now
+        if current_time >= (datetime.combine(ref_date.date(), market_open) + fifteen_minutes).time():
+            return ref_date - fifteen_minutes
+
+        # If it's before 9:45 AM, go to prior market day's close
+        prev_day = ref_date - timedelta(days=1)
+        while prev_day.weekday() > 4:
+            prev_day -= timedelta(days=1)
+        return prev_day.replace(hour=15, minute=45, second=0, microsecond=0)

@@ -38,7 +38,7 @@ class AlpacaExtractor(object):
 
         # Convert to datetime
         data["date"] = datetime.fromisoformat(iso_fixed)
-        return data
+        return data["date"] 
     
     def latest_quote(self,ticker):
         params = {
@@ -47,6 +47,38 @@ class AlpacaExtractor(object):
         url = f"https://data.alpaca.markets/v2/stocks/{ticker}/quotes/latest"
         requestBody = r.get(url,params=params,headers=self.headers)
         return requestBody.json()["quote"]
+    
+    def latest_trade(self,ticker):
+        params = {
+            "feed":"delayed_sip"
+        }
+        url = f"https://data.alpaca.markets/v2/stocks/{ticker}/trades/latest"
+        requestBody = r.get(url,params=params,headers=self.headers)
+        return requestBody.json()["trade"]
+    
+    def quotes(self,ticker,start,end):
+        params = {
+            "feed":"sip",
+            "start":start.strftime("%Y-%m-%d"),
+            "end":end.strftime("%Y-%m-%d"),
+            "limit":1000,
+            "sort":"desc"
+        }
+        url = f"https://data.alpaca.markets/v2/stocks/{ticker}/quotes"
+        requestBody = r.get(url,params=params,headers=self.headers)
+        return pd.DataFrame(requestBody.json()["quotes"])
+    
+    def trades(self,ticker,start,end):
+        params = {
+            "feed":"sip",
+            "start":start.strftime("%Y-%m-%d"),
+            "end":end.strftime("%Y-%m-%d"),
+            "limit":1000,
+            "sort":"desc"
+        }
+        url = f"https://data.alpaca.markets/v2/stocks/{ticker}/trades"
+        requestBody = r.get(url,params=params,headers=self.headers)
+        return pd.DataFrame(requestBody.json()["trades"])
     
     def latest_bar(self,ticker):
         params = {
@@ -97,6 +129,22 @@ class AlpacaExtractor(object):
             except Exception as e:
                 print(str(e))
         return pd.concat(prices)
+
+    def prices_hour(self,ticker,start,end):
+        params = {
+            "symbols":ticker,
+            "adjustment":"all",
+            "timeframe":"10Min",
+            "feed":"sip",
+            "sort":"asc",
+            "start":start.strftime("%Y-%m-%d"),
+            "end":end.strftime("%Y-%m-%d")
+        }
+        url = "https://data.alpaca.markets/v2/stocks/bars"
+        requestBody = r.get(url,params=params,headers=self.headers)
+        data =  pd.DataFrame(requestBody.json()["bars"][ticker]).rename(columns={"h":"high","l":"low","v":"volume","o":"open","c":"close","t":"date"})[["date","close","open","high","low","volume"]]
+        data["ticker"] = ticker
+        return data    
     
     def prices(self,ticker,start,end):
         params = {
@@ -237,3 +285,46 @@ class AlpacaExtractor(object):
         json_request = requestBody.json()["corporate_actions"]
         data =  pd.DataFrame(json_request["cash_dividends"])
         return data
+    
+    def call_options(self,ticker,asof_date):
+        params = {
+            "feed":"indicative",
+            "limit":1000,
+            "updated_since":asof_date.strftime("%Y-%m-%d"),
+            "type":"call"
+        }
+        url = f"https://data.alpaca.markets/v1beta1/options/snapshots/{ticker}"
+        requestBody = r.get(url,params=params,headers=self.headers)
+        json_request = requestBody.json()["snapshots"].keys()
+        return json_request
+    
+    def put_options(self,ticker,asof_date):
+        params = {
+            "feed":"indicative",
+            "limit":1000,
+            "updated_since":asof_date.strftime("%Y-%m-%d"),
+            "type":"put"
+        }
+        url = f"https://data.alpaca.markets/v1beta1/options/snapshots/{ticker}"
+        requestBody = r.get(url,params=params,headers=self.headers)
+        json_request = requestBody.json()["snapshots"].keys()
+        return json_request
+    
+    def latest_option_quote(self,ticker):
+        params = {
+            "symbols":ticker,
+            "feed":"indicative"
+        }
+        url = f"https://data.alpaca.markets/v1beta1/options/quotes/latest"
+        requestBody = r.get(url,params=params,headers=self.headers)
+        print(requestBody.json())
+        return requestBody.json()["quotes"][ticker]
+    
+    def latest_option_trade(self,ticker):
+        params = {
+            "symbols":ticker,
+            "feed":"indicative"
+        }
+        url = f"https://data.alpaca.markets/v1beta1/options/trades/latest"
+        requestBody = r.get(url,params=params,headers=self.headers)
+        return requestBody.json()["trades"][ticker]

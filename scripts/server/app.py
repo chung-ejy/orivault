@@ -108,6 +108,7 @@ def backtest():
                     price["dividend"] = 0
                 price.sort_values("date", inplace=True)
                 price = p.additional_date_columns(price)
+                price["market_cap"] = price["adjclose"] * price["volume"]
                 price = Metric.NEXT_CLOSE.calculate(price,timeframe=rolling_window,live=False)
                 price = Metric.indicator_type_factory(data["grouping_type"].lower()).calculate(price,timeframe=rolling_window,live=False)
                 price = Indicator.indicator_type_factory(data["ranking_metric"].lower()).calculate(price,timeframe=rolling_window,live=False)

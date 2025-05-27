@@ -10,3 +10,4 @@ coinbase-advanced-py==1.8.2
 lxml==5.3.2
 spacy==3.8.5
 pokemontcgsdk==3.4.0
+holidays==0.73

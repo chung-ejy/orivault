@@ -206,19 +206,7 @@ class AlpacaExtractor(object):
         url = f"{self.domain}/v2/orders"
         requestBody = r.post(url,json=data,headers=self.headers)
         return requestBody.json()
-    
-    def buy_fraction(self,ticker,notional):
-        data = {
-            "side": "buy",
-            "type": "market",
-            "time_in_force": "day",
-            "symbol": ticker,
-            "notional": notional
-            }
-        url = f"{self.domain}/v2/orders"
-        requestBody = r.post(url,json=data,headers=self.headers)
-        return requestBody.json()
-    
+        
     def long_stop_loss(self,ticker,stop_price,quantity):
         data = {
             "side": "sell",
@@ -262,20 +250,26 @@ class AlpacaExtractor(object):
     
     def orders(self):
         params = {
-            "status":"closed",
-            "limit":500,
-            "after":(datetime.now() - timedelta(days=365*1.5)).strftime("%Y-%m-%d"),
-            "until":(datetime.now()).strftime("%Y-%m-%d"),
-            "direction":"asc",
+            "status":"open",
+            "limit":100,
+            # "after":(datetime.now() - timedelta(days=5)).strftime("%Y-%m-%d"),
+            # "until":(self.clock()).strftime("%Y-%m-%d"),
+            "direction":"desc",
             "nested":"false"
                   }
         url = f"{self.domain}/v2/orders"
         requestBody = r.get(url,params=params,headers=self.headers)
-        return requestBody.json()
+        return pd.DataFrame(requestBody.json())
     
     def cancel_orders(self):
         params = {}
         url = f"{self.domain}/v2/orders"
+        requestBody = r.delete(url,params=params,headers=self.headers)
+        return requestBody.json()
+    
+    def cancel_order(self,order_id):
+        params = {}
+        url = f"{self.domain}/v2/orders/{order_id}"
         requestBody = r.delete(url,params=params,headers=self.headers)
         return requestBody.json()
     

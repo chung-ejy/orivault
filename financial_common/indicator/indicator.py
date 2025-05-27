@@ -24,18 +24,19 @@ class Indicator(Enum):
 
     def calculate(self, price, timeframe=100, live=False):
         """Calculate reference values, add computed indicator values to the dataframe, and return the updated dataframe."""
-        cols = self.get_columns(live)        
+        for col in ["adjclose", "high", "low", "volume"]:
+            price[f"{col}_test"] = price[col].shift(1)       
         price[self.label] = self.calculation_method().calculate(price, timeframe, live)
         return price
 
     @classmethod
     def get_columns(cls, live):
-        """Return column mappings based on live or non-live mode."""
+        """Return column mappings based on live or test mode."""
         return {
-            "price": "adjclose",
-            "high": "high",
-            "low": "low",
-            "volume": "volume"
+            "price": "adjclose" if live else "adjclose_test",
+            "high": "high" if live else "high_test",
+            "low": "low" if live else "low_test",
+            "volume": "volume" if live else "volume_test"
         }
 
     @classmethod
@@ -46,12 +47,13 @@ class Indicator(Enum):
     def __str__(self):
         return self.label
 
+# ---- Indicators ---- #
 class OptimalIndicator:
     @staticmethod
     def calculate(price, timeframe, live):
         cols = Indicator.get_columns(live)
         return price[cols["price"]].pct_change(-5, fill_method=None)
-    
+
 class ADRIndicator:
     @staticmethod
     def calculate(price, timeframe, live):
@@ -73,7 +75,7 @@ class SMACorrIndicator:
         spread = 1 - (price[cols["high"]] - price[cols["low"]]).rolling(timeframe).mean() / price[cols["price"]].rolling(timeframe).mean()
         rollings_corr.replace([np.inf, -np.inf], np.nan, inplace=True)
         return rollings * rollings_corr * spread
-    
+
 class EMAIndicator:
     @staticmethod
     def calculate(price, timeframe, live):
@@ -87,7 +89,7 @@ class EMACorrIndicator:
         rollings = (price[cols["price"]].ewm(span=timeframe, adjust=False).mean() / price[cols["price"]] - 1)
         rollings_corr = rollings.rolling(timeframe).corr(price[cols["price"]]) / rollings.rolling(timeframe).corr(price[cols["price"]]).abs()
         spread = 1 - (price[cols["high"]] - price[cols["low"]]).rolling(timeframe).mean() / price[cols["price"]].rolling(timeframe).mean()
-        volume = (price[cols["volume"]]).rolling(timeframe).mean() * price[cols["price"]].rolling(timeframe).mean()
+        volume = price[cols["volume"]].rolling(timeframe).mean() * price[cols["price"]].rolling(timeframe).mean()
         rollings_corr.replace([np.inf, -np.inf], np.nan, inplace=True)
         return rollings * rollings_corr * spread * volume
 
@@ -117,7 +119,7 @@ class ROCIndicator:
     @staticmethod
     def calculate(price, timeframe, live):
         cols = Indicator.get_columns(live)
-        return price[cols["price"]].pct_change(timeframe, fill_method=None)
+        return (price[cols["price"]] / price[cols["price"]].shift(1)) - 1
 
 class WilliamsRIndicator:
     @staticmethod

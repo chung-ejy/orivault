@@ -85,10 +85,12 @@ def options():
     data = request.json
     response = base_response()
     end = Utils.last_weekday(alp.clock())
-    print(end)
-    index = alp.call_options(data["ticker"],end)
-    contracts = list(index)
-    contracts.sort()
+    try:
+        index = alp.call_options(data["ticker"],end)
+        contracts = list(index)
+        contracts.sort()
+    except:
+        contracts = []
     response["data"] = contracts
     return jsonify(response)
 
@@ -106,6 +108,64 @@ def option_trade():
     response = base_response()
     trade = alp.latest_option_trade(data["ticker"])
     response["data"] = trade
+    return jsonify(response)
+
+@app.route('/api/orders',methods=["GET"])
+def orders():
+    response = base_response()
+    orders = alp.orders()
+    print(orders.head())
+    response["data"] = orders.fillna("").to_dict("records")
+    return jsonify(response)
+
+@app.route('/api/orders',methods=["DELETE"])
+def cancel_order():
+    data = request.json
+    response = base_response()
+    try:
+        alp.cancel_order(data["order_id"])
+        response["data"] = "Order cancelled successfully"
+    except Exception as e:
+        response["data"] = str(e)
+    return jsonify(response)
+
+@app.route('/api/positions',methods=["GET"])
+def positions():
+    response = base_response()
+    positions = alp.positions()
+    response["data"] = positions.fillna("").to_dict("records")
+    return jsonify(response)
+
+@app.route('/api/account',methods=["GET"])
+def account():
+    response = base_response()
+    account = alp.account()
+    response["data"] = account
+    return jsonify(response)
+
+@app.route('/api/buy', methods=['POST'])
+def buy():
+    data = request.json
+    response = base_response()
+    data["side"] = "buy"
+    try:
+        alp.buy(data["ticker"], float(data["adjclose"]), float(data["qty"]))
+        response["data"] = "Buy order placed successfully"
+    except Exception as e:
+        response["data"] = str(e)
+    return jsonify(response)
+
+@app.route('/api/sell', methods=['POST'])
+def sell():
+    data = request.json
+    data["side"] = "sell"
+    response = base_response()
+    print(data)
+    # try:
+    #     alp.sell(data["ticker"], float(data["adjclose"]), float(data["qty"]))
+    #     response["data"] = "sell order placed successfully"
+    # except Exception as e:
+    #     response["data"] = str(e)
     return jsonify(response)
 
 if __name__ == '__main__':

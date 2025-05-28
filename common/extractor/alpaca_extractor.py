@@ -61,7 +61,7 @@ class AlpacaExtractor(object):
             "feed":"sip",
             "start":start.strftime("%Y-%m-%d"),
             "end":end.strftime("%Y-%m-%d"),
-            "limit":1000,
+            "limit":3000,
             "sort":"desc"
         }
         url = f"https://data.alpaca.markets/v2/stocks/{ticker}/quotes"
@@ -73,7 +73,7 @@ class AlpacaExtractor(object):
             "feed":"sip",
             "start":start.strftime("%Y-%m-%d"),
             "end":end.strftime("%Y-%m-%d"),
-            "limit":1000,
+            "limit":3000,
             "sort":"desc"
         }
         url = f"https://data.alpaca.markets/v2/stocks/{ticker}/trades"
@@ -179,7 +179,8 @@ class AlpacaExtractor(object):
         }
         url = "https://data.alpaca.markets/v2/stocks/bars"
         requestBody = r.get(url,params=params,headers=self.headers)
-        data =  pd.DataFrame(requestBody.json()["bars"][ticker]).rename(columns={"h":"high","l":"low","v":"volume","c":"adjclose","t":"date"})[["date","adjclose","high","low","volume"]]
+        data =  pd.DataFrame(requestBody.json()["bars"][ticker]).rename(columns={"h":"high","l":"low","v":"volume","o":"open","c":"adjclose","t":"date"})[["date","adjclose","open","high","low","volume"]]
+        data["close"] = data["adjclose"]
         data["ticker"] = ticker
         return data
     

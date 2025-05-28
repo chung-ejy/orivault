@@ -66,6 +66,13 @@ class SMAIndicator:
         cols = Indicator.get_columns(live)
         return price[cols["price"]].rolling(timeframe).mean() / price[cols["price"]] - 1
 
+
+class EMAIndicator:
+    @staticmethod
+    def calculate(price, timeframe, live):
+        cols = Indicator.get_columns(live)
+        return price[cols["price"]].ewm(span=timeframe, adjust=False).mean() / price[cols["price"]]
+    
 class SMACorrIndicator:
     @staticmethod
     def calculate(price, timeframe, live):
@@ -74,13 +81,8 @@ class SMACorrIndicator:
         rollings_corr = rollings.rolling(timeframe).corr(price[cols["price"]]) / rollings.rolling(timeframe).corr(price[cols["price"]]).abs()
         spread = 1 - (price[cols["high"]] - price[cols["low"]]).rolling(timeframe).mean() / price[cols["price"]].rolling(timeframe).mean()
         rollings_corr.replace([np.inf, -np.inf], np.nan, inplace=True)
+        rollings_corr.fillna(0, inplace=True)
         return rollings * rollings_corr * spread
-
-class EMAIndicator:
-    @staticmethod
-    def calculate(price, timeframe, live):
-        cols = Indicator.get_columns(live)
-        return price[cols["price"]].ewm(span=timeframe, adjust=False).mean() / price[cols["price"]]
 
 class EMACorrIndicator:
     @staticmethod
@@ -89,9 +91,9 @@ class EMACorrIndicator:
         rollings = (price[cols["price"]].ewm(span=timeframe, adjust=False).mean() / price[cols["price"]] - 1)
         rollings_corr = rollings.rolling(timeframe).corr(price[cols["price"]]) / rollings.rolling(timeframe).corr(price[cols["price"]]).abs()
         spread = 1 - (price[cols["high"]] - price[cols["low"]]).rolling(timeframe).mean() / price[cols["price"]].rolling(timeframe).mean()
-        volume = price[cols["volume"]].rolling(timeframe).mean() * price[cols["price"]].rolling(timeframe).mean()
         rollings_corr.replace([np.inf, -np.inf], np.nan, inplace=True)
-        return rollings * rollings_corr * spread * volume
+        rollings_corr.fillna(0, inplace=True)
+        return rollings * rollings_corr * spread
 
 class BollingerUpperIndicator:
     @staticmethod

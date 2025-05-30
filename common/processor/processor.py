@@ -14,7 +14,7 @@ class Processor(object):
     @staticmethod
     def lower_column(data):
         for col in data.columns:
-            data.rename(columns={col: col.replace(" ", "_").lower()}, inplace=True)
+            data = data.rename(columns={col: col.replace(" ", "_").lower()})
         return data
     
     # Purpose: Converts the "date" column in the DataFrame to a UTC datetime format and normalizes 

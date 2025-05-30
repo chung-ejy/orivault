@@ -11,8 +11,7 @@ class Metric(Enum):
     DISTANCE = ("distance", lambda: Distance())
     COOKED_RETURN = ("cooked_return", lambda: CookedReturn())
     NEXT_CLOSE = ("next_close", lambda: NextClose())
-    NEXT_HIGH = ("next_high", lambda: NextHigh())
-    NEXT_LOW = ("next_low", lambda: NextLow())
+    NEXT_OPEN = ("next_open", lambda: NextOpen())
     DIVIDEND = ("dividend", lambda: Dividend())
     PriceToReturn = ("price_to_return", lambda: PriceToReturn())
 
@@ -59,15 +58,10 @@ class NextClose:
     def calculate(price, timeframe, live):
         return price["adjclose"].shift(-1)
 
-class NextHigh:
+class NextOpen:
     @staticmethod
     def calculate(price, timeframe, live):
-        return price["high"].shift(-1)
-
-class NextLow:
-    @staticmethod
-    def calculate(price, timeframe, live):
-        return price["low"].shift(-1)
+        return price["open"].shift(-1)
 
 class Drawdown:
     @staticmethod

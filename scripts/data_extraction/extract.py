@@ -23,7 +23,7 @@ market = ADatabase("market")
 alp = AlpacaExtractor()
 
 ## Download stock prices
-end = alp.clock()["date"] - timedelta(days=1)
+end = alp.clock() - timedelta(days=1)
 start = (end - timedelta(days=365.25*years))
 
 alpaca_tickers = pd.DataFrame(alp.assets())

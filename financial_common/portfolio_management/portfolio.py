@@ -40,21 +40,7 @@ class Portfolio(object):
     def trades(self, sim):
         trades = self.timeframe_trades(sim.copy())
         trades = self.allocations(trades)
-        trades["close_return"] = (trades["sell_price"] / trades["adjclose"] - 1) * trades["position_type"] + 1
-
-        # Calculate low return with correct position type handling
-        trades["low_return"] = np.where(
-            trades["position_type"] == 1,
-            (trades["sell_low"] / trades["adjclose"] - 1) * trades["position_type"] + 1,
-            (trades["sell_high"] / trades["adjclose"] - 1) * trades["position_type"] + 1
-        )
-
-        # Select final return based on stop-loss condition
-        trades["unweighted_return"] = np.where(
-            trades["low_return"] < 1 - self.stoploss,
-            1 - self.stoploss,  # If stop-loss is hit, use stop-loss return
-            trades["close_return"]
-        )
+        trades["unweighted_return"] = (trades["sell_price"] / trades["adjclose"] - 1) * trades["position_type"] + 1
 
         # Winsorize returns
         trades["winsorized_return"] = winsorize(trades["unweighted_return"].copy(), limits=[0.05, 0.05])
@@ -85,17 +71,17 @@ class Portfolio(object):
         return trades
     
     def timeframe_trades(self,sim):
-        sim["sell_price"] = sim["adjclose"] if self.timeframe.value != "day" else sim["next_close"]
-        sim["sell_high"] = sim["high"] if self.timeframe.value != "day" else sim["next_high"]
-        sim["sell_low"] = sim["low"] if self.timeframe.value != "day" else sim["next_low"]
+        sim["sell_price"] = sim["adjclose"] if self.timeframe.value != "day" else sim["next_open"]
         sim["sell_date"] = sim["date"]
-        query = {"date":"last","market_cap":"first","adjclose":"first","sell_price":"last","sell_high":"last","sell_low":"last"}
+        query = {"date":"last","weekday":"first","market_cap":"first","adjclose":"first","sell_price":"last"}
         query[self.grouping_type.value] = "first"
         query[self.ranking_metric] = "first"
         query[self.risk_type.label] = "first"
         timeframe_sim = sim.groupby(["year",self.timeframe.value,"ticker"]).agg(query).reset_index().sort_values("date")
         if self.timeframe.value=="week":
-            timeframe_sim = timeframe_sim[(timeframe_sim[self.timeframe.value] != 1) & (timeframe_sim[self.timeframe.value] < 52)].sort_values("date")    
+            timeframe_sim = timeframe_sim[(timeframe_sim[self.timeframe.value] != 1) & (timeframe_sim[self.timeframe.value] < 52)].sort_values("date")
+        # if self.timeframe.value=="day":
+        #     timeframe_sim = timeframe_sim[(timeframe_sim["weekday"] > 0) & (timeframe_sim["weekday"] < 4)].sort_values("date")    
         return timeframe_sim
     
     def postprocessing(self,sim):

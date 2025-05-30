@@ -19,7 +19,11 @@ class AlpacaExtractor(object):
     
     def assets(self):
         url = "https://api.alpaca.markets/v2/assets"
-        requestBody = r.get(url,headers=self.headers)
+        params = {
+            "status":"active",
+            "asset_class":"us_equity"
+        }   
+        requestBody = r.get(url,params=params,headers=self.headers)
         data = pd.DataFrame(requestBody.json()).rename(columns={"symbol":"ticker"})
         relevant_tickers = data[(data["marginable"]==True) & (data["tradable"]==True) & (~data["exchange"].isin(["OTC","CRYPTO"]))].copy()[["ticker","marginable","exchange"]]
         return relevant_tickers
@@ -123,7 +127,7 @@ class AlpacaExtractor(object):
         prices = []
         for ticker in tickers:
             try:
-                data =  pd.DataFrame(requestBody.json()["bars"][ticker]).rename(columns={"h":"high","l":"low","v":"volume","c":"adjclose","t":"date"})[["date","adjclose","high","low","volume"]]
+                data =  pd.DataFrame(requestBody.json()["bars"][ticker]).rename(columns={"h":"high","l":"low","v":"volume","o":"open","c":"adjclose","t":"date"})[["date","open","adjclose","high","low","volume"]]
                 data["ticker"] = ticker
                 prices.append(data)
             except Exception as e:

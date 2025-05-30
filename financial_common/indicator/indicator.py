@@ -17,6 +17,7 @@ class Indicator(Enum):
     VWAP = ("vwap", lambda: VWAPIndicator())
     MARKET_IMPACT = ("market_impact", lambda: MarketImpactIndicator())
     ATR = ("atr", lambda: ATRIndicator())
+    VOLUME_RETURN = ("volume_return",lambda:VolumeReturn())
 
     def __init__(self, label, calculation_method):
         self.label = label
@@ -24,6 +25,7 @@ class Indicator(Enum):
 
     def calculate(self, price, timeframe=100, live=False):
         """Calculate reference values, add computed indicator values to the dataframe, and return the updated dataframe."""
+        price = price.sort_values(by=["date"], ascending=True)
         for col in ["adjclose", "high", "low", "volume"]:
             price[f"{col}_test"] = price[col].shift(1)       
         price[self.label] = self.calculation_method().calculate(price, timeframe, live)
@@ -47,7 +49,6 @@ class Indicator(Enum):
     def __str__(self):
         return self.label
 
-# ---- Indicators ---- #
 class OptimalIndicator:
     @staticmethod
     def calculate(price, timeframe, live):
@@ -71,7 +72,7 @@ class EMAIndicator:
     @staticmethod
     def calculate(price, timeframe, live):
         cols = Indicator.get_columns(live)
-        return price[cols["price"]].ewm(span=timeframe, adjust=False).mean() / price[cols["price"]]
+        return price[cols["price"]].ewm(span=timeframe, adjust=False).mean() / price[cols["price"]] -1
     
 class SMACorrIndicator:
     @staticmethod
@@ -88,12 +89,16 @@ class EMACorrIndicator:
     @staticmethod
     def calculate(price, timeframe, live):
         cols = Indicator.get_columns(live)
-        rollings = (price[cols["price"]].ewm(span=timeframe, adjust=False).mean() / price[cols["price"]] - 1)
+        rollings = (price[cols["price"]].ewm(span=timeframe, adjust=False).mean() / price[cols["price"]])
         rollings_corr = rollings.rolling(timeframe).corr(price[cols["price"]]) / rollings.rolling(timeframe).corr(price[cols["price"]]).abs()
         spread = 1 - (price[cols["high"]] - price[cols["low"]]).rolling(timeframe).mean() / price[cols["price"]].rolling(timeframe).mean()
-        rollings_corr.replace([np.inf, -np.inf], np.nan, inplace=True)
-        rollings_corr.fillna(0, inplace=True)
-        return rollings * rollings_corr * spread
+        rollings_corr = rollings_corr.replace([np.inf, -np.inf], np.nan)
+        rollings_corr = rollings_corr.fillna(0)
+        risk = 1 - price[cols["price"]].pct_change().rolling(timeframe).mean()
+        change = price[cols["price"]].pct_change()
+        corr = change.shift(1).rolling(timeframe).corr(change) / change.shift(1).rolling(timeframe).corr(change).abs() 
+        vtc = (price[cols["volume"]] / price[cols["price"]]).pct_change()
+        return vtc
 
 class BollingerUpperIndicator:
     @staticmethod
@@ -154,3 +159,9 @@ class ATRIndicator:
     def calculate(price, timeframe, live):
         cols = Indicator.get_columns(live)
         return (price[cols["high"]] - price[cols["low"]]).rolling(timeframe).mean()
+    
+class VolumeReturn:
+    @staticmethod
+    def calculate(price, timeframe, live):
+        cols = Indicator.get_columns(live)
+        return  price[cols["price"]].ewm(span=timeframe, adjust=False).mean() /  (price[cols["price"]].rolling(timeframe).mean() * price[cols["volume"]].rolling(timeframe).mean())

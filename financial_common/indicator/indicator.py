@@ -1,6 +1,6 @@
 from enum import Enum
 import numpy as np
-
+from scipy.stats import norm
 class Indicator(Enum):
     OPTIMAL = ("optimal", lambda: OptimalIndicator())
     ADR = ("adr", lambda: ADRIndicator())
@@ -16,7 +16,7 @@ class Indicator(Enum):
     MARKET_IMPACT = ("market_impact", lambda: MarketImpactIndicator())
     ATR = ("atr", lambda: ATRIndicator())
     VOLUME_PRICE = ("volume_price",lambda:VolumePrice())
-
+    OPTION_PRICE = ("option_price", lambda: OptionPrice())
     def __init__(self, label, calculation_method):
         self.label = label
         self.calculation_method = calculation_method
@@ -174,3 +174,21 @@ class VolumePrice:
         spread = 1 - (price[cols["high"]] - price[cols["low"]]) / price[cols["price"]]
         volume = price[cols["volume"]]/1000000
         return spread * volume
+
+class OptionPrice:
+    @staticmethod
+    def calculate(price,timeframe,live):
+        cols = Indicator.get_columns(live)
+        S = price[cols["price"]]
+        K = price[cols["price"]] * (0.95)
+        T = float(timeframe / 252)
+        r = 0.05
+        sigma = price[cols["price"]].pct_change().rolling(timeframe).std() * timeframe ** (1/2)
+        d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
+        d2 = d1 - sigma * np.sqrt(T)
+        spread = 1 - (price[cols["high"]] - price[cols["low"]]) / price[cols["price"]]
+        volume = price[cols["volume"]]/1000000
+        premium = S * norm.cdf(d1) - K * np.exp(-r * T) * norm.cdf(d2)
+        return premium / price[cols["price"]]
+        # return  volume / price[cols["price"]]
+        # return premium * spread * volume / price[cols["price"]]

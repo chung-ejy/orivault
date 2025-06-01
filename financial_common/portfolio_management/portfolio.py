@@ -47,7 +47,7 @@ class Portfolio(object):
 
         # Compute weighted return
         trades["weighted_return"] = (trades["unweighted_return"] - 1) * self.leverage * trades["weight"]
-        trades["return"] = (trades["winsorized_return"] - 1) * self.leverage * trades["weight"]
+        trades["return"] = (trades["winsorized_return"] - 1) * self.leverage * trades["weight"] * (1-0.07**(1/360))
 
         return trades
 
@@ -81,7 +81,7 @@ class Portfolio(object):
         if self.timeframe.value=="week":
             timeframe_sim = timeframe_sim[(timeframe_sim[self.timeframe.value] != 1) & (timeframe_sim[self.timeframe.value] < 52)].sort_values("date")
         # if self.timeframe.value=="day":
-        #     timeframe_sim = timeframe_sim[(timeframe_sim["weekday"] > 0) & (timeframe_sim["weekday"] < 4)].sort_values("date")    
+        #     timeframe_sim = timeframe_sim[(timeframe_sim["weekday"] < 4)].sort_values("date")    
         return timeframe_sim
     
     def postprocessing(self,sim):

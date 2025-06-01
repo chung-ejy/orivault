@@ -5,9 +5,7 @@ class Indicator(Enum):
     OPTIMAL = ("optimal", lambda: OptimalIndicator())
     ADR = ("adr", lambda: ADRIndicator())
     SMA = ("sma", lambda: SMAIndicator())
-    SMACorr = ("sma_corr", lambda: SMACorrIndicator())
     EMA = ("ema", lambda: EMAIndicator())
-    EMACorr = ("ema_corr", lambda: EMACorrIndicator())
     BOLLINGER_UPPER = ("bollinger_upper", lambda: BollingerUpperIndicator())
     BOLLINGER_LOWER = ("bollinger_lower", lambda: BollingerLowerIndicator())
     MOMENTUM = ("momentum", lambda: MomentumIndicator())
@@ -17,7 +15,7 @@ class Indicator(Enum):
     VWAP = ("vwap", lambda: VWAPIndicator())
     MARKET_IMPACT = ("market_impact", lambda: MarketImpactIndicator())
     ATR = ("atr", lambda: ATRIndicator())
-    VOLUME_RETURN = ("volume_return",lambda:VolumeReturn())
+    VOLUME_PRICE = ("volume_price",lambda:VolumePrice())
 
     def __init__(self, label, calculation_method):
         self.label = label
@@ -35,10 +33,10 @@ class Indicator(Enum):
     def get_columns(cls, live):
         """Return column mappings based on live or test mode."""
         return {
-            "price": "adjclose" if live else "adjclose_test",
-            "high": "high" if live else "high_test",
-            "low": "low" if live else "low_test",
-            "volume": "volume" if live else "volume_test"
+            "price": "adjclose" if live == True else "adjclose_test",
+            "high": "high" if live == True else "high_test",
+            "low": "low" if live == True else "low_test",
+            "volume": "volume" if live == True else "volume_test"
         }
 
     @classmethod
@@ -164,4 +162,15 @@ class VolumeReturn:
     @staticmethod
     def calculate(price, timeframe, live):
         cols = Indicator.get_columns(live)
-        return  price[cols["price"]].ewm(span=timeframe, adjust=False).mean() /  (price[cols["price"]].rolling(timeframe).mean() * price[cols["volume"]].rolling(timeframe).mean())
+        ewm = price[cols["price"]].ewm(span=timeframe, adjust=False).mean() / price[cols["price"]]
+        corr = ewm.rolling(timeframe).corr(price[cols["price"]]) / ewm.rolling(timeframe).corr(price[cols["price"]]).abs()
+        market_cap = (price[cols["price"]].rolling(timeframe).mean() * price[cols["volume"]].rolling(timeframe).mean())
+        return ewm / market_cap * 1000000
+
+class VolumePrice:
+    @staticmethod
+    def calculate(price, timeframe, live):
+        cols = Indicator.get_columns(live)
+        spread = 1 - (price[cols["high"]] - price[cols["low"]]) / price[cols["price"]]
+        volume = price[cols["volume"]]/1000000
+        return spread * volume

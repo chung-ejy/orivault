@@ -5,7 +5,7 @@ import numpy as np
 class Metric(Enum):
     AVERAGE_RETURN = ("average_return", lambda: AverageReturn())
     STANDARD_DEV = ("standard_dev", lambda: StandardDev())
-    ROLLING_DOLLAR_VOLUME = ("rolling_dollar_volume", lambda: RollingDollarVolume())
+    MARKETCAP = ("market_cap", lambda: MarketCap())
     SIMPLE_MOVING_AVERAGE = ("simple_moving_average", lambda: SimpleMovingAverage())
     DRAWDOWN = ("drawdown", lambda: Drawdown())
     DISTANCE = ("distance", lambda: Distance())
@@ -119,11 +119,11 @@ class CookedReturn:
         norm_factor = (1 + w) * (1 - y) * (1 + z) * x_scaled
         return norm_factor  
 
-class RollingDollarVolume:
+class MarketCap:
     @staticmethod
     def calculate(price, timeframe, live):
         cols = Metric.get_columns(live)
-        return (price[cols["price"]] * price[cols["volume"]]).rolling(window=timeframe).mean()
+        return (price[cols["price"]] * price[cols["volume"]])
 
 class Dividend:
     @staticmethod

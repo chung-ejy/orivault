@@ -73,7 +73,7 @@ class Portfolio(object):
     def timeframe_trades(self,sim):
         sim["sell_price"] = sim["adjclose"] if self.timeframe.value != "day" else sim["next_open"]
         sim["sell_date"] = sim["date"]
-        query = {"date":"last","weekday":"first","market_cap":"first","adjclose":"first","sell_price":"last"}
+        query = {"date":"last","weekday":"first","market_cap":"first","open":"first","adjclose":"first","sell_price":"last"}
         query[self.grouping_type.value] = "first"
         query[self.ranking_metric] = "first"
         query[self.risk_type.label] = "first"

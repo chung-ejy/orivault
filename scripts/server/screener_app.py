@@ -60,7 +60,7 @@ def trades():
     response = base_response()
     try:
         data = request.json
-        end = Utils.last_weekday(alp.clock())
+        end = alp.clock() - timedelta(minutes=15)
         start = end - timedelta(days=5)
         trades = alp.trades(data["ticker"], start, end)
         response["data"] = trades.drop("c", axis=1).to_dict("records")
@@ -198,9 +198,23 @@ def account():
     response = base_response()
     try:
         account = alp.account()
+        pv = float(account.get("portfolio_value", 0))  # Ensure safe access to portfolio value
+
+        # Allow cash percentage to vary dynamically
+        cash_percentage = float(account.get("cash_requirement", 0.2))  # Default 20%, adjust as needed
+        cash_balance = round(pv * cash_percentage, 2)  # Adjusted cash allocation
+        marginable_securities = round(pv * (1 - cash_percentage), 2)  # Remaining portfolio exposure
+
+        # Margin limit adjusts dynamically based on required cash allocation
+        account["margin_limit"] = round((pv - cash_balance) * 2, 2)  # Reflects marginable portion
+
+        # Loss limit ensures proper portfolio risk handling
+        account["loss_limit"] = round(1 - ((account["margin_limit"] + cash_balance) / (pv * 2)), 2)
         response["data"] = account
     except Exception as e:
+        print(f"Error: {e}")
         response["data"] = {}
+    
     return jsonify(response)
 
 @app.route('/api/buy', methods=['POST'])
@@ -208,7 +222,7 @@ def buy():
     response = base_response()
     try:
         data = request.json
-        alp.buy(data["ticker"], float(data["adjclose"]), float(data["qty"]))
+        print(alp.buy(data["ticker"], round(float(data["adjclose"]),4), int(data["qty"])))
         response["data"] = "Buy order placed successfully"
     except Exception as e:
         response["data"] = str(e)
@@ -219,7 +233,7 @@ def sell():
     response = base_response()
     try:
         data = request.json
-        alp.sell(data["ticker"], float(data["adjclose"]), float(data["qty"]))
+        print(alp.sell(data["ticker"], float(data["qty"])))
         response["data"] = "Sell order placed successfully"
     except Exception as e:
         response["data"] = str(e)

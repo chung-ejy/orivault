@@ -180,7 +180,8 @@ class OptionPrice:
     def calculate(price,timeframe,live):
         cols = Indicator.get_columns(live)
         S = price[cols["price"]]
-        K = price[cols["price"]] * (0.95)
+        K = price[cols["price"]] * (.95)
+        K_PUT = price[cols["price"]] * (1.05)
         T = float(timeframe / 252)
         r = 0.05
         sigma = price[cols["price"]].pct_change().rolling(timeframe).std() * timeframe ** (1/2)
@@ -189,6 +190,7 @@ class OptionPrice:
         spread = 1 - (price[cols["high"]] - price[cols["low"]]) / price[cols["price"]]
         volume = price[cols["volume"]]/1000000
         premium = S * norm.cdf(d1) - K * np.exp(-r * T) * norm.cdf(d2)
-        return premium / price[cols["price"]]
+        put_premium = K_PUT * np.exp(-r * T) * norm.cdf(-d2) - S * norm.cdf(-d1)
+        return (premium + put_premium) / price[cols["price"]]
         # return  volume / price[cols["price"]]
         # return premium * spread * volume / price[cols["price"]]

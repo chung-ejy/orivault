@@ -240,13 +240,13 @@ class AlpacaExtractor(object):
         requestBody = r.post(url,json=data,headers=self.headers)
         return requestBody.json()
     
-    def sell(self,ticker,adjclose,quantity):
+    def sell(self,ticker,quantity):
         data = {
             "side": "sell",
-            "type": "limit",
-            "time_in_force": "day",
+            "type": "market",
+            "time_in_force": "opg",
             "symbol": ticker,
-            "limit_price": adjclose,
+            # "limit_price": adjclose,
             "qty": quantity
             }
         url = f"{self.domain}/v2/orders"

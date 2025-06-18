@@ -2,15 +2,12 @@ from enum import Enum
 
 class GroupingType(Enum):
     STANDARD_DEV = "standard_dev"  
-    AVERAGE_RETURN =  "average_return"
-    ROLLING_DOLLAR_VOLUME =  "rolling_dollar_volume"
-    SIMPLE_MOVING_AVERAGE =  "simple_moving_average"
-    DRAWDOWN =  "drawdown"
+    # AVERAGE_RETURN =  "average_return"
+    # SIMPLE_MOVING_AVERAGE =  "simple_moving_average"
+    # DRAWDOWN =  "drawdown"
     DISTANCE = "distance"
-    DIVIDEND = "dividend"
-    COOKED_RETURN = "cooked_return"
-    # GICS = "GICS Sector"
-    # GICS_SUB = "GICS Sub-Industry"
+    # DIVIDEND = "dividend"
+    # COOKED_RETURN = "cooked_return"
     @classmethod
     def get_grouping_type(cls, position_label):
         """

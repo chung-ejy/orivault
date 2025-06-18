@@ -183,7 +183,7 @@ class OptionPrice:
         K = price[cols["price"]] * (.95)
         K_PUT = price[cols["price"]] * (1.05)
         T = float(timeframe / 252)
-        r = 0.05
+        r = 0.07
         sigma = price[cols["price"]].pct_change().rolling(timeframe).std() * timeframe ** (1/2)
         d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
         d2 = d1 - sigma * np.sqrt(T)
@@ -191,6 +191,6 @@ class OptionPrice:
         volume = price[cols["volume"]]/1000000
         premium = S * norm.cdf(d1) - K * np.exp(-r * T) * norm.cdf(d2)
         put_premium = K_PUT * np.exp(-r * T) * norm.cdf(-d2) - S * norm.cdf(-d1)
-        return (premium + put_premium) / price[cols["price"]]
+        return (premium - put_premium) / price[cols["price"]]
         # return  volume / price[cols["price"]]
         # return premium * spread * volume / price[cols["price"]]

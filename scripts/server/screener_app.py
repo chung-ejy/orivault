@@ -233,7 +233,7 @@ def sell():
     response = base_response()
     try:
         data = request.json
-        print(alp.sell(data["ticker"], float(data["qty"])))
+        print(alp.sell(data["ticker"], round(float(data["adjclose"]),4), int(data["qty"])))
         response["data"] = "Sell order placed successfully"
     except Exception as e:
         response["data"] = str(e)

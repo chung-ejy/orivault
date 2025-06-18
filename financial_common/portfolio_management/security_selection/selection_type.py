@@ -61,16 +61,15 @@ class TopBlackListSelection:
         trades = trades.sort_values(["date", "rank_percentile"])  # Sort once for efficiency
 
         filtered_trades = []
-        previous_blacklist, current_blacklist = set(), set()
+        previous_blacklist= set()
 
-        for major_key, date_trades in trades.groupby("major_key"):  
+        for major_key, date_trades in trades.groupby("major_key"):
+            current_blacklist = set()
             daily_trade = date_trades.loc[~date_trades["ticker"].isin(previous_blacklist)].head(1)
             filtered_trades.append(daily_trade)
 
             current_blacklist.update(daily_trade["ticker"])  
-
-            if len(current_blacklist) >= 3:  # More robust check
-                previous_blacklist, current_blacklist = current_blacklist.copy(), set()  
+            previous_blacklist = current_blacklist.copy()  
 
         top = pd.concat(filtered_trades, ignore_index=True)  # `ignore_index=True` for efficiency
         top["position_type"] = position_type.portfolio_effect
@@ -83,17 +82,14 @@ class BottomBlackListSelection:
         trades = trades.sort_values(["date", "rank_percentile"])  # Sort once for efficiency
 
         filtered_trades = []
-        previous_blacklist, current_blacklist = set(), set()
-
-        for major_key, date_trades in trades.groupby("major_key"):  
+        previous_blacklist= set()
+        for major_key, date_trades in trades.groupby("major_key"):
+            current_blacklist = set()
             daily_trade = date_trades.loc[~date_trades["ticker"].isin(previous_blacklist)].tail(1)
             filtered_trades.append(daily_trade)
 
-            current_blacklist.update(daily_trade["ticker"])  
-
-            if len(current_blacklist) >= daily_trade["group_percentile"].astype(int).max():  # More robust check
-                previous_blacklist, current_blacklist = current_blacklist.copy(), set()  
-
+            current_blacklist.update(daily_trade["ticker"]) 
+            previous_blacklist = current_blacklist.copy()  
         top = pd.concat(filtered_trades, ignore_index=True)  # `ignore_index=True` for efficiency
         top["position_type"] = position_type.portfolio_effect
         

@@ -28,18 +28,10 @@ end = pd.to_datetime(alp.clock()["date"])
 
 
 if end.weekday() <= 4 and end.hour ==  9:
-    tickers = pd.DataFrame([x.__dict__ for x in coinbase.client.get_accounts()["accounts"] if x.currency != "USD" and x.currency != "USDT"])
-    tickers = tickers[["name","currency","active"]][tickers["active"]==True]
-    tickers["ticker"] = tickers["currency"] + "-USD"
 
     alpaca_tickers = pd.DataFrame(alp.assets())
 
     market.cloud_connect()
     market.drop("ticker_overview")
     market.store("ticker_overview",alpaca_tickers)
-    market.disconnect()
-
-    market.cloud_connect()
-    market.drop("cryptocurrencies")
-    market.store("cryptocurrencies",tickers)
     market.disconnect()

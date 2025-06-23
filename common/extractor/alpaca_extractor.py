@@ -211,6 +211,18 @@ class AlpacaExtractor(object):
         url = f"{self.domain}/v2/orders"
         requestBody = r.post(url,json=data,headers=self.headers)
         return requestBody.json()
+    
+    def buy_market(self,ticker,notional):
+        data = {
+            "side": "buy",
+            "type": "market",
+            "time_in_force": "day",
+            "symbol": ticker,
+            "notional": notional
+            }
+        url = f"{self.domain}/v2/orders"
+        requestBody = r.post(url,json=data,headers=self.headers)
+        return requestBody.json()
         
     def long_stop_loss(self,ticker,stop_price,quantity):
         data = {

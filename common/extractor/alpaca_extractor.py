@@ -25,7 +25,7 @@ class AlpacaExtractor(object):
         }   
         requestBody = r.get(url,params=params,headers=self.headers)
         data = pd.DataFrame(requestBody.json()).rename(columns={"symbol":"ticker"})
-        relevant_tickers = data[(data["marginable"]==True) & (data["tradable"]==True) & (~data["exchange"].isin(["OTC","CRYPTO"]))].copy()[["ticker","marginable","exchange"]]
+        relevant_tickers = data[(data["marginable"]==True) & (data["tradable"]==True) & (data["fractionable"]==True) & (~data["exchange"].isin(["OTC","CRYPTO"]))].copy()[["ticker","marginable","exchange"]]
         return relevant_tickers
     
     def clock(self):
